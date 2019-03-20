@@ -8,9 +8,9 @@
 <body>
 <script src="jQuery.js"></script>
 
+<button id="test2">模拟遍历祖先</button>
 
 <button id="test1">jQuery遍历祖先</button>
-<button id="test2">模拟遍历祖先</button>
 
 <ul class="level-1">
   <li class="item-i">I</li>
@@ -36,58 +36,102 @@
   let ajQuery = {};
   // 针对层级关系的处理，jQuery就抽出了一个dir的方法，用于根据传递的元素与词素的位置关系，查找指定的元素。
   // parent，parents，parentsUntil等方法如代码所示：
+
+  // parents:dir(elem,"parentNode")
+  //parentsUntil:dir(elem, "parentNode", until)
   function dir(elem, dir, until) {
-    var matched = [],
-      truncate = until !== undefined;
+    let matched = []
+    //parents:false
+    let truncate = until !== undefined;
+    //elem默认值为elem[dir]
+    //举例：
+    //let a=<li class="item-1">1</li>
+    //a.parentNode=<ul class="level-2">xxx</ul>
+
+    //9是Document，即整个文档的根节点
+    //即递归的终结条件是到document结束
     while ((elem = elem[dir]) && elem.nodeType !== 9) {
+      //1 Element即一个元素
+      //意思就是elem是一个Element
       if (elem.nodeType === 1) {
+        //parents方法不走这边
+        //parentsUntil方法走这边
+        //body
         if (truncate) {
-          if (elem.nodeName.toLowerCase() == until || elem.className == until) {
+          //在向上递归返回父节点的同时，判断是否达到条件
+          //节点名和类名
+          if (elem.nodeName.toLowerCase() === until || elem.className === until) {
             break;
           }
         }
         matched.push(elem);
       }
     }
+
+    //写法二
+    //elem由选择器判断，是必存在才会运行到此处的
+    // while (elem.nodeType !== 9) {
+    //   elem = elem[dir]
+    //   xxx
+    //   xxx
+    // }
+
     return matched;
   }
-
+  
   jQuery.each({
+    //本质即 elem.parentNode
     parent: function(elem) {
       //调用原生js的parentNode
       var parent = elem.parentNode;
-      //11 表示 nodeType是documentFragment
+      //11表示documentFragment
       //documentFragment是没有父节点parentNode的！！
       //详情请看：深入理解DOM节点类型第四篇——文档片段节点DocumentFragment
       // https://www.cnblogs.com/xiaohuochai/p/5816048.html
       return parent && parent.nodeType !== 11 ? parent : null;
     },
+
+    //parents的本质即利用 elem.parent 向上递归直到document节点
     parents: function(elem) {
       return dir(elem, "parentNode");
     },
+    //该方法从父元素向上遍历 DOM 元素的祖先，直至文档根元素的所有路径，直到到达指定的元素为止
+    //until既可以是节点名也可以是类名
     parentsUntil: function(elem, until) {
       return dir(elem, "parentNode", until);
     }
-  }, function(name, fn) {
+  },
+    //回调函数
+    function(name, fn) {
+    //将jQuery的方法定义到ajQuery上
     ajQuery[name] = function(until, selector) {
       return  fn(until, selector);
     };
   });
 
-
+  $("#test2").click(function() {
+    // <li class="item-1">1</li>
+    var item = document.querySelectorAll('.item-1')[0]
+    console.log(item,'item93')
+    //这他妈太神奇了。。
+    console.log(item['parentNode'],'item94')
+    console.log(item.parentNode,'item101')
+    console.log(item.parentNode.nodeName,'item117')
+    console.log(item.parentNode.className,'item118')
+    console.log(ajQuery.parent(item))
+    console.log(ajQuery.parents(item).length)
+    console.log(ajQuery.parentsUntil(item, 'body').length)
+  })
+  
   $("#test1").click(function() {
     var item = $('.item-1');
-    alert(item.parent()[0])
-    alert(item.parents().length)
-    alert(item.parentsUntil('body').length)
+    console.log(item)
+    console.log(item.parent()[0])
+    console.log(item.parents().length)
+    console.log(item.parentsUntil('body').length)
   })
 
-  $("#test2").click(function() {
-    var item = document.querySelectorAll('.item-1')[0]
-    alert(ajQuery.parent(item))
-    alert(ajQuery.parents(item).length)
-    alert(ajQuery.parentsUntil(item, 'body').length)
-  })
+ 
 
 
 </script>
