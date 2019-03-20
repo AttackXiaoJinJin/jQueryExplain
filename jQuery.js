@@ -177,17 +177,23 @@
     // The default length of a jQuery object is 0
     //jQuery对象即类数组集合
     length: 0,
-
+    //将jQuery对象转换成数组类型
     toArray: function() {
+      //arr.slice.call(this)
       return slice.call( this );
     },
 
     // Get the Nth element in the matched element set OR
     // Get the whole matched element set as a clean array
+
+    //当num不为null，且>=0的时候，返回 索引为num的jQuery数组元素
+    //当num不为null，且<0的时候，索引是num + this.length，直到为正数
+    //当num为null，则直接将jQuery对象转为数组并返回
     get: function( num ) {
 
       // Return all the elements in a clean array
       if ( num == null ) {
+        //Array.prototype.slice.call('123') //["1", "2", "3"]
         return slice.call( this );
       }
 
@@ -195,18 +201,30 @@
       return num < 0 ? this[ num + this.length ] : this[ num ];
     },
 
-    //入栈
     // Take an array of elements and push it onto the stack
     // (returning the new matched element set)
+
+    //获取一组DOM元素并将其入栈，返回新匹配的元素集合
+    //在 $().parent()、$().find()、$().filter() 等中频繁使用
+
     pushStack: function( elems ) {
 
       // Build a new jQuery matched element set
+
+      //jQuery.merge() 的作用是将参数二合并到参数一上并返回
+      //由于this.constructor()表示jQuery的构造函数，相当于jQuery.fn.init()
+      // 所以这段代码就相当于新创建了一个jQuery对象，并将DOM元素合并到新的jQuery对象上
+      //所以，入栈的elems可以使用css()等操作
       var ret = jQuery.merge( this.constructor(), elems );
 
       // Add the old object onto the stack (as a reference)
+      //将
+      //通过prevObject绑定旧对象
+      //所以可以通过prevObject取到上一个合集的引用
       ret.prevObject = this;
 
       // Return the newly-formed element set
+      //返回新包装的 element集合
       return ret;
     },
 
@@ -2957,7 +2975,7 @@
       // Handle HTML strings
       //当选择的是字符串
       if ( typeof selector === "string" ) {
-        //以<>开头结尾，并且整体长度>=3的字符串，如<a>、<ul>
+        //以<>开头结尾，并且整体长度>=3的字符串，如'<a>'、'<ul>'
         if (selector[ 0 ] === "<" &&
             selector[ selector.length - 1 ] === ">" &&
             selector.length >= 3 )
@@ -3022,6 +3040,9 @@
           } else
             //处理$("#id")的情况
             //$("#idone")-->["#idone", undefined, "idone", index: 0, input: "#idone", groups: undefined]
+
+            //处理$($('#idone'))的情况
+            //["#idone", undefined, "idone", index: 0, input: "#idone", groups: undefined]
           {
             elem = document.getElementById( match[ 2 ] );
 
@@ -3039,29 +3060,45 @@
 
           // HANDLE: $(expr, $(...))
         }
-        //如果第一个参数是 .className，第二个参数是
+        //如果第一个参数是 .className，第二个参数是一个选择器
         else if ( !context || context.jquery ) {
+          //root相当于jQuery(document)
+          //下面的return相当于$(context).find(selector)/jQuery(document).find(selector)
+          //调用Sizzle引擎进行更复杂的选择器查找
           return ( context || root ).find( selector );
 
           // HANDLE: $(expr, context)
           // (which is just equivalent to: $(context).find(expr)
-        } else {
+        }
+        //如果第一个参数是.className，第二个参数是上下文对象
+        //相当于 $(.className .className)
+        else {
+          //相当于jQuery.constructor(context).find(selector)
+          //调用Sizzle引擎进行更复杂的选择器查找
           return this.constructor( context ).find( selector );
         }
 
         // HANDLE: $(DOMElement)
-      } else if ( selector.nodeType ) {
+      }
+      //有DOMElement的话，如 $(<div>xxx</div>)
+      else if ( selector.nodeType ) {
         this[ 0 ] = selector;
         this.length = 1;
+        //添加属性，然后返回
         return this;
 
         // HANDLE: $(function)
         // Shortcut for document ready
-      } else if ( isFunction( selector ) ) {
+      }
+      //$(function(){xxx})
+      //3974行左右 jQuery.fn.ready
+      else if ( isFunction( selector ) ) {
         return root.ready !== undefined ?
           root.ready( selector ) :
 
           // Execute immediately if ready is not present
+
+          //如果ready=undefined就立即执行
           selector( jQuery );
       }
 
@@ -3922,8 +3959,12 @@
     readyWait: 1,
 
     // Handle when the DOM is ready
-    ready: function( wait ) {
 
+    // $(document).ready(function(){
+    //   xxx
+    // });
+    ready: function( wait ) {
+      console.log(wait,jQuery.readyWait,'wait3964') //undefined 1
       // Abort if there are pending holds or we're already ready
       if ( wait === true ? --jQuery.readyWait : jQuery.isReady ) {
         return;
