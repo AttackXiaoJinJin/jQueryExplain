@@ -57,34 +57,10 @@
     return matched;
   }
 
-  function find(elem,endElem) {
-    let matched = [];
-
-    // if(endElem){
-    //   elem=elem.querySelector(endElem)
-    //   if(!elem) return
-    // }
-
-    //如果目标元素的第一个子元素存在
-    if(elem.firstChild){
-      //获取目标元素的第一个子元素
-      elem=elem.firstChild
-
-      while(elem){
-        if (elem.nodeType === 1){
-          if(elem.nodeName.toLowerCase()===endElem&&elem.className===endElem) {
-            break
-          }
-          console.log(elem,'elem74')
-          
-          matched.push(elem);
-        }
-        //注意顺序，由于先firstChild了，所以要先push一个
-        elem=elem.nextSibling
-      }
-    }
-
-    return matched;
+  //find(selector)的selector情况很多，jQuery是通过Sizzle选择器去selctor
+  //但在大多数情况下，我们可以这样处理
+  function find(elem, selector) {
+    return elem.querySelectorAll(selector);
   }
   
   $("#test1").click(function() {
@@ -95,19 +71,19 @@
     // //遍历直接子元素
     console.log(children(ul),'sibling52')
     // //遍历类名为item-c的li元素的所有直接子元素
-    // console.log(children(li,'item-c'),'sibling56')
-    //
-    // console.log(find(ul),'sibling52')
-    // console.log(find(li,'item-c'),'sibling56')
+    console.log(children(li,'item-c'),'sibling56')
+
+    console.log(find(ul,'li.item-b'),'sibling52')
+    console.log(find(ul,'div'),'sibling56')
   })
 
   $("#test2").click(function(){
     //children() 方法返回被选元素的所有直接子元素
-    // console.log($('.level-2').children(),'children69')
-    // console.log($('li').children('.item-c'),'children70')
+    console.log($('.level-2').children(),'children69')
+    console.log($('li').children('.item-c'),'children70')
 
     console.log($('.level-2').find("li"),'children72')
-    // console.log($('li').find('.item-c'),'children73')
+    console.log($('li').find('.item-c'),'children73')
 
   })
 
