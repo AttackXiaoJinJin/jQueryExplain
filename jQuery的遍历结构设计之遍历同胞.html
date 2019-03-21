@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery的遍历结构设计之遍历同胞</title>
+
+</head>
+<body>
+<script src="jQuery.js"></script>
+
+<button id="test1">模拟遍历同胞</button>
+
+<button id="test2">jQuery遍历同胞</button>
+
+<ul class="level-1">
+  <li class="item-i">I</li>
+  <!--目标节点-->
+  <li class="item-ii">II
+    <ul class="level-2">
+      <li class="item-a">A</li>
+      <li class="item-b">B
+        <ul class="level-3">
+          <li class="item-1">1</li>
+          <li class="item-2">2</li>
+          <li class="item-3">3</li>
+          <li class="item-4">4</li>
+        </ul>
+      </li>
+      <li class="item-c">C</li>
+    </ul>
+  </li>
+  <li class="item-iii">III</li>
+</ul>
+
+<script type="text/javascript">
+  function dir(elem, dir, until) {
+    let matched = []
+
+    let truncate = until !== undefined
+
+    let sibElem
+    let isSibling=false
+    //遍历同胞元素有两种方法
+    //第一种是先 prevAll 向前遍历目标元素的同胞元素，再 nextAll向后遍历目标元素的同胞元素
+    //第二种是先找到父元素的第一个元素，再 nextAll向后遍历同胞元素，最后将 目标元素从数组中去掉
+    if(dir==='siblings'){
+      sibElem=elem
+      isSibling=true
+      elem=elem.parentNode.firstElementChild
+      dir='nextSibling'
+      matched.push(elem)
+    }
+
+    //nextAll:一直nextSibling，直到elem=null，退出循环
+    while ((elem = elem[dir])&&elem.nodeType !== 9) {
+      if (elem.nodeType === 1) {
+        //nextUntil:true
+        if (truncate) {
+          console.log(elem.nodeName.toLowerCase(),elem.className,'className44')
+          if (elem.nodeName.toLowerCase() === until || elem.className === until) {
+            console.log(until,'until46')
+            break
+          }
+        }
+        console.log(elem,'elem50')
+        matched.push(elem)
+      }
+    }
+
+    if(isSibling){
+      console.log(sibElem,matched.indexOf(sibElem),'sibElem66')
+      matched.splice(matched.indexOf(sibElem),1)
+    }
+
+    return matched
+  }
+
+  function sibling(elem, dir) {
+    //过滤掉不是element类型的元素
+    while ((elem = elem[dir]) && elem.nodeType !== 1) { }
+    return elem
+  }
+
+  let ajQuery = {}
+
+  jQuery.each({
+      // nextAll() 方法返回被选元素之后的所有同级元素
+      // 同级元素是共享相同父元素的元素
+      //详细请看：http://www.runoob.com/jquery/traversing-nextall.html
+
+      //nextAll的本质即利用 elem.nextSibling，抓取element节点，向后递归直到elem=null
+      nextAll:function (elem) {
+          return dir(elem, "nextSibling")
+      },
+      //prevAll() 方法返回被选元素之前的所有同级元素
+      //详细请看：http://www.runoob.com/jquery/traversing-prevall.html
+
+      //prevAll的本质即利用 elem.previousSibling，抓取element节点，向前递归直到elem=null
+      prevAll:function (elem) {
+        return dir(elem, "previousSibling")
+      },
+
+      //返回在类名为 "item-1" 和 "item-4" 的两个 <li> 元素之间的所有同级元素
+      //详细请看：http://www.runoob.com/jquery/traversing-nextuntil.html
+
+      //nextUntil的本质即利用 elem.nextSibling，抓取element节点，
+      //向后递归直到elem.nodeName.toLowerCase()===until||elem.className === until
+      nextUntil:function (elem, until) {
+        return dir(elem, "nextSibling", until)
+      },
+      //返回在类名为 "item-4" 和 "item-1" 的两个 <li> 元素之间的所有同级元素
+      //详细请看：http://www.runoob.com/jquery/traversing-prevuntil.html
+
+      //prevUntil的本质即利用 elem.previousSibling，抓取element节点，
+      //向前递归直到elem.nodeName.toLowerCase()===until||elem.className === until
+      prevUntil: function (elem, until) {
+        return dir(elem, "previousSibling", until)
+      },
+      //next:返回被选元素的 后一个同级元素
+      next: function (elem) {
+        return sibling(elem, "nextSibling");
+      },
+      //prev:返回被选元素的 前一个同级元素
+      prev: function (elem) {
+        return sibling(elem, "previousSibling");
+      },
+      //siblings:返回被选元素的 所有同胞元素（共享一个父元素，且不包括自己）
+      siblings: function (elem) {
+        return dir(elem, "siblings")
+      }
+    },
+
+    function(key, value) {
+      ajQuery[key] = function(elem, until) {
+        return  value(elem, until);
+      }
+    })
+
+  $("#test1").click(function(){
+    // let item = document.querySelectorAll('li.item-ii')[0]
+    // let item = document.querySelectorAll('li.item-1')[0]
+    let item = document.querySelectorAll('li.item-2')[0]
+    //#text 3
+    //nodeType=3，而不是1，所以不符合要求
+    // console.log(item.nextSibling,item.nextSibling.nodeType)
+    // console.log(item.nextSibling.nextSibling,item.nextSibling.nextSibling.nodeType)
+    // console.log(item.nextSibling.nextSibling.nextSibling,item.nextSibling.nextSibling.nextSibling.nodeType)
+    // //null
+    // console.log(item.nextSibling.nextSibling.nextSibling.nextSibling)
+    // console.log(ajQuery.nextAll(item))
+    // console.log(ajQuery.nextAll(item)[0].className)
+    // console.log(ajQuery.prevAll(item)[0].className)
+    // console.log(ajQuery.nextUntil(item, 'item-4'),'item107')
+    // console.log(ajQuery.nextUntil(item, 'item-4')[0].className,'item108')
+    // console.log(ajQuery.prevUntil(item, 'item-2')[0].className)
+    //
+    // console.log(prev(item))
+    // console.log(next(item))
+
+    // Siblings item.parentNode.firstElementChild
+    console.log(ajQuery.siblings(item,'siblings'),'siblings151')
+
+  })
+
+  $("#test2").click(function(){
+    let $item = $('li.item-2')
+    console.log($item.nextAll()[0].className)
+    console.log($item.prevAll()[0].className)
+    console.log($item.nextUntil('item-4'))
+    console.log($item.nextUntil('item-4')[0].className)
+    console.log($item.prevUntil('item-2')[0].className)
+
+    console.log($item.prev())
+    console.log($item.next())
+  })
+
+</script>
+</body>
+</html>
