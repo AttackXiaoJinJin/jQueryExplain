@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery的遍历结构设计之遍历后代</title>
+
+
+</head>
+<body>
+<script src="jQuery.js"></script>
+<button id="test1">模拟children方法</button>
+
+<button id="test2">jQuery children方法</button>
+
+<div></div>
+  <ul class="level-2">
+    <li class="item-a">A</li>
+    <li class="item-b">B
+      <div>D</div>
+      <div>f</div>
+    </li>
+    <li class="item-c">C
+      <div>E</div>
+      <div>g</div>
+      <div>h</div>
+    </li>
+  </ul>
+
+<script type="text/javascript">
+  //endElem 默认为类名，当然还有其他情况暂不一一去实现了
+  function children(elem,endElem) {
+    let matched = [];
+
+    if(endElem){
+      elem=elem.querySelector(endElem)
+      if(!elem) return
+    }
+
+    //如果目标元素的第一个子元素存在
+    if(elem.firstChild){
+      //获取目标元素的第一个子元素
+      elem=elem.firstChild
+
+      while(elem){
+        if (elem.nodeType === 1){
+          if(elem.nodeName.toLowerCase()===endElem&&elem.className===endElem) {
+            break
+          }
+          matched.push(elem);
+        }
+        // console.log(elem,elem.nextElementSibling,'nextSibling51')
+        //注意顺序，由于先firstChild了，所以要先push一个
+        elem=elem.nextSibling
+      }
+    }
+
+    return matched;
+  }
+
+  function find(elem,endElem) {
+    let matched = [];
+
+    // if(endElem){
+    //   elem=elem.querySelector(endElem)
+    //   if(!elem) return
+    // }
+
+    //如果目标元素的第一个子元素存在
+    if(elem.firstChild){
+      //获取目标元素的第一个子元素
+      elem=elem.firstChild
+
+      while(elem){
+        if (elem.nodeType === 1){
+          if(elem.nodeName.toLowerCase()===endElem&&elem.className===endElem) {
+            break
+          }
+          console.log(elem,'elem74')
+          
+          matched.push(elem);
+        }
+        //注意顺序，由于先firstChild了，所以要先push一个
+        elem=elem.nextSibling
+      }
+    }
+
+    return matched;
+  }
+  
+  $("#test1").click(function() {
+    let ul = document.querySelectorAll('.level-2')[0]
+    let li = document.querySelectorAll('li')[0]
+    console.log(li.nextElementSibling.nextElementSibling)
+    
+    // //遍历直接子元素
+    console.log(children(ul),'sibling52')
+    // //遍历类名为item-c的li元素的所有直接子元素
+    // console.log(children(li,'item-c'),'sibling56')
+    //
+    // console.log(find(ul),'sibling52')
+    // console.log(find(li,'item-c'),'sibling56')
+  })
+
+  $("#test2").click(function(){
+    //children() 方法返回被选元素的所有直接子元素
+    // console.log($('.level-2').children(),'children69')
+    // console.log($('li').children('.item-c'),'children70')
+
+    console.log($('.level-2').find("li"),'children72')
+    // console.log($('li').find('.item-c'),'children73')
+
+  })
+
+
+
+</script>
+</body>
+</html>
