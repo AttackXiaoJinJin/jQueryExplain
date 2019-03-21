@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>jQuery的遍历结构设计</title>
+  <title>jQuery的遍历结构设计之遍历祖先</title>
 
 </head>
 <body>
 <script src="jQuery.js"></script>
 
-<button id="test2">模拟遍历祖先</button>
+<button id="test1">模拟遍历祖先</button>
 
-<button id="test1">jQuery遍历祖先</button>
+<button id="test2">jQuery遍历祖先</button>
 
 <ul class="level-1">
   <li class="item-i">I</li>
@@ -32,8 +32,6 @@
 
 
 <script>
-
-  let ajQuery = {};
   // 针对层级关系的处理，jQuery就抽出了一个dir的方法，用于根据传递的元素与词素的位置关系，查找指定的元素。
   // parent，parents，parentsUntil等方法如代码所示：
 
@@ -78,12 +76,19 @@
 
     return matched;
   }
-  
+
+  let ajQuery = {};
+  //循环自定义一个对象，对象的每个属性的value是function，并在回调中对key、value进行操作
+  //jQuery.each即$.each
+  //$.each(object,callback(key,value))
+  //$.each(array,callback(index,value))
+  //详情请参考：http://api.jquery.com/jquery.each/
   jQuery.each({
     //本质即 elem.parentNode
     parent: function(elem) {
       //调用原生js的parentNode
       var parent = elem.parentNode;
+      console.log(elem,'elem87')
       //11表示documentFragment
       //documentFragment是没有父节点parentNode的！！
       //详情请看：深入理解DOM节点类型第四篇——文档片段节点DocumentFragment
@@ -91,7 +96,7 @@
       return parent && parent.nodeType !== 11 ? parent : null;
     },
 
-    //parents的本质即利用 elem.parent 向上递归直到document节点
+    //parents的本质即利用 elem.parentNode 向上递归直到document节点
     parents: function(elem) {
       return dir(elem, "parentNode");
     },
@@ -102,19 +107,24 @@
     }
   },
     //回调函数
-    function(name, fn) {
+    //对象：key value
+    //数组：index value
+    function(key, value) {
+    console.log(key,value,'name107')
     //将jQuery的方法定义到ajQuery上
-    ajQuery[name] = function(until, selector) {
-      return  fn(until, selector);
+    ajQuery[key] = function(elem, until) {
+      console.log(elem,until,'selector116')
+      return  value(elem, until);
     };
   });
 
-  $("#test2").click(function() {
+  $("#test1").click(function() {
     // <li class="item-1">1</li>
     var item = document.querySelectorAll('.item-1')[0]
-    console.log(item,'item93')
+    // console.log(item,'item93')
     //这他妈太神奇了。。
     console.log(item['parentNode'],'item94')
+    console.log(item['className'],'item95')
     console.log(item.parentNode,'item101')
     console.log(item.parentNode.nodeName,'item117')
     console.log(item.parentNode.className,'item118')
@@ -123,8 +133,8 @@
     console.log(ajQuery.parentsUntil(item, 'body').length)
   })
   
-  $("#test1").click(function() {
-    var item = $('.item-1');
+  $("#test2").click(function() {
+    var item = $('.item-1')
     console.log(item)
     console.log(item.parent()[0])
     console.log(item.parents().length)
