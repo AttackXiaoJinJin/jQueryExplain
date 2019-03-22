@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery的遍历结构设计之节点操作</title>
+
+</head>
+<body>
+<script src="jQuery.js"></script>
+  <button id="test1">append操作</button>
+  <button id="test2">after操作</button>
+  <button id="test3">html操作</button>
+
+  <h2>Greetings</h2>
+  <div class="container">
+    <div class="inner">Hello</div>
+    <div class="inner">Goodbye</div>
+  </div>
+
+<script type="text/javascript">
+  //源码5597行-5586行
+  //作用是将传入的参数（dom节点元素、字符串、函数）统一转化为符合要求的DOM节点
+  //例:$('.inner').append('<p>Test</p>')
+  //collections即$('.inner')
+  //args即<p>Test</p>
+  function domManip( nodelist, args, callback ) {
+    console.log(nodelist,args,'ignored5798')
+    //数组深复制成新的数组副本
+    //源码是:args = concat.apply( [], args )，这里没有用arguments，而是传参就改了
+    let argsArr = []
+    argsArr.push(args)
+    console.log(argsArr,'args31')
+    //l 长度，比如类名为.inner的li有两组,2
+    let fragment,node, i = 0,l = nodelist.length
+    let iNoClone = l - 1
+    console.log(l,'l34')
+    //l=2
+    if ( l ) {
+      console.log(argsArr,nodelist[0].ownerDocument,nodelist,'firstChild40')
+      //argsArr:<p>Test</p>
+      //nodelist[0].ownerDocument:目标节点所属的文档
+      fragment = buildFragment(argsArr,nodelist[0].ownerDocument,false,nodelist );
+      console.log(fragment.childNodes,'firstChild42')
+      //即<p>Test</p>
+      if (fragment.firstChild) {
+        
+        //=====根据collection的长度循环操作========
+        for ( ; i < l; i++ ) {
+          console.log(node,fragment.childNodes,'childNodes49')
+          node = fragment;
+
+          if ( i !== iNoClone ) {
+            node = jQuery.clone( node, true, true );
+          }
+
+          console.log(nodelist[i], node.childNodes,'node50')
+          //call(this,param)
+          callback.call( nodelist[i], node);
+        }
+        //====================
+
+      }
+    }
+    console.log(nodelist,'nodelist58')
+    return nodelist
+  }
+
+  //源码5724行-5733行
+  //额外判断，当在table插入一个tr时，需要先插入tbody，再插入tr
+  //this, node
+  function manipulationTarget( elem, node ) {
+    // 如果是table里面插入行tr
+    if ( nodeName( elem, "table" ) &&
+      nodeName( node.nodeType !== 11 ? node : node.firstChild, "tr" ) ) {
+      return jQuery( elem ).children( "tbody" )[ 0 ] || elem
+    }
+
+    return elem
+  }
+
+  //源码2843行-2847行
+  //判断elemt的nodeName是否和name相同，返回true/false
+  function nodeName( elem, name ) {
+    return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
+  }
+
+  //源码4857行-4945行
+  //args, collection[ 0 ].ownerDocument, false, collection
+  function buildFragment( arr, context, truefalse, selection ) {
+    let elem,tmp, nodes = [], i = 0, l = arr.length
+    // createdocumentfragment()方法创建了一虚拟的节点对象，节点对象包含所有属性和方法。
+    //相当于document.createDocumentFragment()
+    let fragment = context.createDocumentFragment()
+    //l=1
+    console.log(l,'l87')
+    //==============
+    for ( ; i < l; i++ ) {
+      //"<p>test1</p><div>test2</div>"
+      elem = arr[ i ];
+      console.log(i,elem,'elem90')
+      if ( elem || elem === 0 ) {
+        tmp=fragment.appendChild( context.createElement( "div" ) );
+        tmp.innerHTML =jQuery.htmlPrefilter(elem)
+
+        console.log(nodes,tmp.childNodes,'childNodes93')
+
+        jQuery.merge( nodes, tmp.childNodes );
+      }
+    }
+    //================
+    // Remove wrapper from fragment
+    fragment.textContent = "";
+    i=0
+    console.log(nodes,i,'i100')
+    while ( ( elem = nodes[ i++ ] ) ) {
+      fragment.appendChild( elem )
+      console.log(2222,'fragment115')
+    }
+
+    console.log(fragment.childNodes,'fragment105')
+    return fragment;
+  }
+
+  let ajQuery={}
+  jQuery.each({
+      //例:'<p>Test</p>'
+      //源码6011行-6019行
+      // 在被选元素的结尾插入指定内容
+      append: function(nodelist, arguments) {
+
+        let callbackOne=function( node ) {
+          console.log(node,'elem84')
+          if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
+            //table插入tr的额外判断
+            let target = manipulationTarget( this, node );
+            console.log(target,node.childNodes,'target127')
+
+            target.appendChild( node );
+          }
+        }
+
+        console.log(nodelist,arguments,'this120')
+        return domManip( nodelist, arguments, callbackOne );
+      },
+
+    },
+
+    function(key, value) {
+      ajQuery[key] = function(nodelist, arguments) {
+        console.log(nodelist,'nodelist128')
+          return  value(nodelist, arguments);
+        }
+      }
+    )
+
+
+
+
+  $('#test1').click(function(){
+    let innerArr=document.querySelectorAll(".inner")
+    ajQuery.append(innerArr,'<p>test1</p><div>test2</div>')
+
+    // for(let i=0;i<innerArr.length;i++){
+    //   ajQuery.append(innerArr[i],'<p>test1</p><div>test2</div>')
+    // }
+
+
+    // $('.inner').append('<p>test1</p><div>test2</div>');
+    // $('.inner').append('<p>test1</p>');
+  })
+
+  $('#test2').click(function(){
+    $('.inner').after('<p>Test</p>');
+  })
+
+  $('#test3').click(function(){
+    alert($('h2').html())
+  })
+
+</script>
+</body>
+</html>

@@ -4782,7 +4782,7 @@
     }
   } );
   var rcheckableType = ( /^(?:checkbox|radio)$/i );
-
+  //匹配的是 <div 这一部分
   var rtagName = ( /<([a-z][^\/\0>\x20\t\r\n\f]+)/i );
 
   var rscriptType = ( /^$|^module$|\/(?:java|ecma)script/i );
@@ -4790,6 +4790,7 @@
 
 
 // We have to close these tags to support XHTML (#13200)
+  //兼容性，用以支持XHTML
   var wrapMap = {
 
     // Support: IE <=9 only
@@ -4853,22 +4854,25 @@
 
 
   var rhtml = /<|&#?\w+;/;
-
+  //scripts:true/false
   function buildFragment( elems, context, scripts, selection, ignored ) {
     var elem, tmp, tag, wrap, contains, j,
+      // createdocumentfragment()方法创建了一虚拟的节点对象，节点对象包含所有属性和方法。
+      //相当于document.createDocumentFragment()
       fragment = context.createDocumentFragment(),
       nodes = [],
       i = 0,
       l = elems.length;
 
     for ( ; i < l; i++ ) {
+      console.log(elems,elems[ i ],'elem4868')
       elem = elems[ i ];
 
       if ( elem || elem === 0 ) {
-
+        console.log( toType( elem ),!rhtml.test( elem ),'rhtml4870') //string false
         // Add nodes directly
         if ( toType( elem ) === "object" ) {
-
+            
           // Support: Android <=4.0 only, PhantomJS 1 only
           // push.apply(_, arraylike) throws on ancient WebKit
           jQuery.merge( nodes, elem.nodeType ? [ elem ] : elem );
@@ -4879,13 +4883,23 @@
 
           // Convert html into DOM nodes
         } else {
+          //在虚拟节点中添加div子元素
           tmp = tmp || fragment.appendChild( context.createElement( "div" ) );
-
+          
           // Deserialize a standard representation
+          //反序列化标准表示
+          //tag:div
+          //elem:<p>test1</p><div>test2</div>
+
+          //就是匹配 <div 的，没有就是空字符串 ''
           tag = ( rtagName.exec( elem ) || [ "", "" ] )[ 1 ].toLowerCase();
+          console.log(rtagName.exec( elem ),'rtagName4891') //null,只匹配 <div
+          console.log(tag,'rtagName4892') //null,只匹配 <div
+          console.log(tag,elem,rtagName.exec( elem ),'rtagName4894')
+            // [ 0, "", "" ]
           wrap = wrapMap[ tag ] || wrapMap._default;
           tmp.innerHTML = wrap[ 1 ] + jQuery.htmlPrefilter( elem ) + wrap[ 2 ];
-
+          
           // Descend through wrappers to the right content
           j = wrap[ 0 ];
           while ( j-- ) {
@@ -4894,6 +4908,7 @@
 
           // Support: Android <=4.0 only, PhantomJS 1 only
           // push.apply(_, arraylike) throws on ancient WebKit
+          console.log(nodes,tmp.childNodes,tmp,'childNodes4911')
           jQuery.merge( nodes, tmp.childNodes );
 
           // Remember the top-level container
@@ -4907,8 +4922,10 @@
 
     // Remove wrapper from fragment
     fragment.textContent = "";
+    //nodes:[p,div]
 
     i = 0;
+    console.log(tmp,fragment,nodes,i,'nodes4924')
     while ( ( elem = nodes[ i++ ] ) ) {
 
       // Skip elements already in the context collection (trac-4087)
@@ -4920,10 +4937,10 @@
       }
 
       contains = jQuery.contains( elem.ownerDocument, elem );
-
+      console.log(1111,'fragment4939')
       // Append to fragment
       tmp = getAll( fragment.appendChild( elem ), "script" );
-
+      console.log(tmp,contains,'tmp4940')
       // Preserve script evaluation history
       if ( contains ) {
         setGlobalEval( tmp );
@@ -4939,7 +4956,7 @@
         }
       }
     }
-
+    console.log(fragment.childNodes[1],'fragment4957')
     return fragment;
   }
 
@@ -5793,66 +5810,95 @@
       dest.defaultValue = src.defaultValue;
     }
   }
-
+  //作用是将传入的参数（dom节点元素、字符串、函数）统一转化为符合要求的DOM节点
+  //例:$('.inner').append('<p>test1</p><div>test2</div>')
+  //collections即$('.inner')
+  //args即<p>test1</p><div>test2</div>
   function domManip( collection, args, callback, ignored ) {
-
+    console.log(collection,args,'ignored5798')
     // Flatten any nested arrays
+    //数组深复制成新的数组副本
+    /*也就是在这里，将arguments集合转化为DOM节点数组*/
     args = concat.apply( [], args );
-
+    console.log(args,args[0],'args5808')
     var fragment, first, scripts, hasScripts, node, doc,
       i = 0,
+      //l 长度，比如类名为.inner的li有两组,2
       l = collection.length,
+      //1
       iNoClone = l - 1,
+      //即"<p>test1</p><div>test2</div>"
       value = args[ 0 ],
+      //false
       valueIsFunction = isFunction( value );
 
-    // We can't cloneNode fragments that contain checked, in WebKit
+    //We can't cloneNode fragments that contain checked, in WebKit
+    //我们无法在WebKit中克隆包含checked的节点片段
+    //$('.inner').append("<p>test1</p><div>test2</div>" )的话，这段不看
+    console.log(l,typeof value,!support.checkClone,rchecked.test( value ),'value5820')
+    //======================================================
     if ( valueIsFunction ||
       ( l > 1 && typeof value === "string" &&
         !support.checkClone && rchecked.test( value ) ) ) {
+      console.log(value,'value5824')
       return collection.each( function( index ) {
         var self = collection.eq( index );
         if ( valueIsFunction ) {
           args[ 0 ] = value.call( this, index, self.html() );
         }
         domManip( self, args, callback, ignored );
-      } );
+        } 
+      )
     }
-
+    //====================================================
+    //l=2
     if ( l ) {
-      fragment = buildFragment( args, collection[ 0 ].ownerDocument, false, collection, ignored );
+      console.log(collection[0].ownerDocument,'ownerDocument5838')
+      //collection[ 0 ].ownerDocument:目标节点所属的文档
+      fragment = buildFragment( args, collection[ 0 ].ownerDocument, false, collection, ignored )
+      //first即<p>Test</p>
       first = fragment.firstChild;
-
+      console.log(fragment,fragment.childNodes,first,'first5840')
+      //======不看================
       if ( fragment.childNodes.length === 1 ) {
         fragment = first;
       }
+      //==========================
 
       // Require either new content or an interest in ignored elements to invoke the callback
       if ( first || ignored ) {
         scripts = jQuery.map( getAll( fragment, "script" ), disableScript );
+        console.log(scripts,scripts.length,'scripts5851')
+        //false
         hasScripts = scripts.length;
 
         // Use the original fragment for the last item
         // instead of the first because it can end up
         // being emptied incorrectly in certain situations (#8070).
-        for ( ; i < l; i++ ) {
-          node = fragment;
+        //=====根据collection的长度循环操作========
 
+        for ( ; i < l; i++ ) {
+          console.log(node,fragment.childNodes,'childNodes5880')
+
+          node = fragment;
+          //=====不看=========
           if ( i !== iNoClone ) {
             node = jQuery.clone( node, true, true );
-
+            console.log(i,iNoClone,'iNoClone5884')
             // Keep references to cloned scripts for later restoration
             if ( hasScripts ) {
-
               // Support: Android <=4.0 only, PhantomJS 1 only
               // push.apply(_, arraylike) throws on ancient WebKit
               jQuery.merge( scripts, getAll( node, "script" ) );
             }
           }
+          //=================
 
+          console.log(collection[i],node.childNodes,'node5874') //<p>Test<p>,0
           callback.call( collection[ i ], node, i );
         }
-
+        //====================
+        //=========不看========
         if ( hasScripts ) {
           doc = scripts[ scripts.length - 1 ].ownerDocument;
 
@@ -5878,9 +5924,11 @@
             }
           }
         }
+        //========================
+        
       }
     }
-
+    console.log(collection,'collection5929')
     return collection;
   }
 
@@ -6009,12 +6057,28 @@
     },
 
     append: function() {
+      //执行append后，调用了domManip方法
+      //domManip()是jQuery DOM操作的核心函数
+      //dom即Dom元素，Manip是Manipulate的缩写，连在一起就是Dom操作的意思
+      //domManip( collection, args, callback, ignored )
+      console.log(this,arguments,'arguments6061')
+      //elem即node,i没写上去,因为i只表示循环次数，callback仍做相同的事
+      // return domManip( this, arguments, function( node,i ) {
       return domManip( this, arguments, function( elem ) {
+        // $('.inner').append('<p>Test</p>')
+        //elem:<p>Test</p>的dom节点
+        //this:$('.inner')的dom节点
+
+        //nodeType:1表示element元素，11表示documentFragment邻接节点和它们的子树，9表示Document
         if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
           var target = manipulationTarget( this, elem );
+          //target:$('.inner')的dom节点
+          //elem:<p>Test</p>的dom节点
+          console.log(target,elem.childNodes,'target6016')
           target.appendChild( elem );
         }
-      } );
+      }
+      )
     },
 
     prepend: function() {
