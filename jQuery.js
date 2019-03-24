@@ -4854,6 +4854,12 @@
 
 
   var rhtml = /<|&#?\w+;/;
+
+  /*创建文档碎片，原因是一般情况下，我们向DOM中添加新的元素或者节点，DOM会立刻更新。
+  如果向DOM添加100个节点，那么就得更新100次，非常浪费浏览器资源。
+  解决办法就是：我们可以创建一个文档碎片（documentFragment），
+  documentFragment类似于一个小的DOM，在它上面使用innerHTML并在innerHTML上插入多个节点，速度要快于DOM（2-10倍），
+  比如：先将新添加的100个节点添加到文档碎片的innerHTML上，再将文档碎片添加到DOM上。*/
   //scripts:true/false
   function buildFragment( elems, context, scripts, selection, ignored ) {
     var elem, tmp, tag, wrap, contains, j,
@@ -4884,6 +4890,8 @@
           // Convert html into DOM nodes
         } else {
           //在虚拟节点中添加div子元素
+          /*创建div是为了处理innerHTML的缺陷（IE会忽略开头的无作用域元素），
+          让所有的元素都被div元素给包含起来，包括script，style等无作用域的元素*/
           tmp = tmp || fragment.appendChild( context.createElement( "div" ) );
           
           // Deserialize a standard representation
@@ -4892,12 +4900,16 @@
           //elem:<p>test1</p><div>test2</div>
 
           //就是匹配 <div 的，没有就是空字符串 ''
+          /*不支持innerHTML属性的元素，通过正则单独取出处理*/
           tag = ( rtagName.exec( elem ) || [ "", "" ] )[ 1 ].toLowerCase();
           console.log(rtagName.exec( elem ),'rtagName4891') //null,只匹配 <div
           console.log(tag,'rtagName4892') //null,只匹配 <div
           console.log(tag,elem,rtagName.exec( elem ),'rtagName4894')
             // [ 0, "", "" ]
+          /*作用就是利用wrapMap让不支持innerHTML的元素通过包装wrap来支持innerHTML*/
           wrap = wrapMap[ tag ] || wrapMap._default;
+          //将修正好的element添加进innerHTML中
+          //jQuery.htmlPrefilter:标签转换为闭合标签，如<table> --> <table></table>
           tmp.innerHTML = wrap[ 1 ] + jQuery.htmlPrefilter( elem ) + wrap[ 2 ];
           
           // Descend through wrappers to the right content
@@ -5870,8 +5882,9 @@
         scripts = jQuery.map( getAll( fragment, "script" ), disableScript );
         console.log(scripts,scripts.length,'scripts5851')
         //false
+        /*判断是否包含<script>标签*/
         hasScripts = scripts.length;
-
+        console.log(hasScripts,'hasScripts5886')
         // Use the original fragment for the last item
         // instead of the first because it can end up
         // being emptied incorrectly in certain situations (#8070).
@@ -5899,6 +5912,7 @@
         }
         //====================
         //=========不看========
+        //如果有<script>标签，就解析script
         if ( hasScripts ) {
           doc = scripts[ scripts.length - 1 ].ownerDocument;
 
@@ -5954,6 +5968,7 @@
   }
 
   jQuery.extend( {
+    //标签转换为闭合标签，如<table> --> <table></table>
     htmlPrefilter: function( html ) {
       return html.replace( rxhtmlTag, "<$1></$2>" );
     },
@@ -6055,7 +6070,7 @@
           } );
       }, null, value, arguments.length );
     },
-
+    /*append的内部的原理，就是通过创建一个文档碎片，把新增的节点放到文档碎片中，通过文档碎片克隆到到页面上去，目的是效率更高*/
     append: function() {
       //执行append后，调用了domManip方法
       //domManip()是jQuery DOM操作的核心函数

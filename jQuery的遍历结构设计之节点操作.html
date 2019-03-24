@@ -33,7 +33,6 @@
     //l 长度，比如类名为.inner的li有两组,2
     let fragment,node, i = 0,l = nodelist.length
     let iNoClone = l - 1
-    console.log(l,'l34')
     //l=2
     if ( l ) {
       console.log(argsArr,nodelist[0].ownerDocument,nodelist,'firstChild40')
@@ -74,7 +73,6 @@
       nodeName( node.nodeType !== 11 ? node : node.firstChild, "tr" ) ) {
       return jQuery( elem ).children( "tbody" )[ 0 ] || elem
     }
-
     return elem
   }
 
@@ -85,6 +83,11 @@
   }
 
   //源码4857行-4945行
+  /*创建文档碎片，原因是一般情况下，我们向DOM中添加新的元素或者节点，DOM会立刻更新。
+  如果向DOM添加100个节点，那么就得更新100次，非常浪费浏览器资源。
+  解决办法就是：我们可以创建一个文档碎片（documentFragment），
+  documentFragment类似于一个小的DOM，在它上面使用innerHTML并在innerHTML上插入多个节点，速度要快于DOM（2-10倍），
+  比如：先将新添加的100个节点添加到文档碎片的innerHTML上，再将文档碎片添加到DOM上。*/
   //args, collection[ 0 ].ownerDocument, false, collection
   function buildFragment( arr, context, truefalse, selection ) {
     let elem,tmp, nodes = [], i = 0, l = arr.length
@@ -99,7 +102,10 @@
       elem = arr[ i ];
       console.log(i,elem,'elem90')
       if ( elem || elem === 0 ) {
+        /*创建div是为了处理innerHTML的缺陷（IE会忽略开头的无作用域元素），
+          让所有的元素都被div元素给包含起来，包括script，style等无作用域的元素*/
         tmp=fragment.appendChild( context.createElement( "div" ) );
+        //将修正好的element添加进innerHTML中
         tmp.innerHTML =jQuery.htmlPrefilter(elem)
 
         console.log(nodes,tmp.childNodes,'childNodes93')
@@ -110,6 +116,7 @@
     //================
     // Remove wrapper from fragment
     fragment.textContent = "";
+    //需要将i重置为0
     i=0
     console.log(nodes,i,'i100')
     while ( ( elem = nodes[ i++ ] ) ) {
@@ -126,10 +133,12 @@
       //例:'<p>Test</p>'
       //源码6011行-6019行
       // 在被选元素的结尾插入指定内容
+      /*append的内部的原理，就是通过创建一个文档碎片，把新增的节点放到文档碎片中，通过文档碎片克隆到到页面上去，目的是效率更高*/
       append: function(nodelist, arguments) {
 
         let callbackOne=function( node ) {
           console.log(node,'elem84')
+          //this指的就是$("xxx")
           if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
             //table插入tr的额外判断
             let target = manipulationTarget( this, node );
@@ -157,8 +166,8 @@
 
 
   $('#test1').click(function(){
-    let innerArr=document.querySelectorAll(".inner")
-    ajQuery.append(innerArr,'<p>test1</p><div>test2</div>')
+    // let innerArr=document.querySelectorAll(".inner")
+    // ajQuery.append(innerArr,'<p>test1</p><div>test2</div>')
 
     // for(let i=0;i<innerArr.length;i++){
     //   ajQuery.append(innerArr[i],'<p>test1</p><div>test2</div>')
@@ -166,10 +175,14 @@
 
 
     // $('.inner').append('<p>test1</p><div>test2</div>');
-    // $('.inner').append('<p>test1</p>');
+    /*$.append() 会执行script*/
+    $('.inner').append("<script>alert('append执行script')");
+
+
   })
 
   $('#test2').click(function(){
+
     $('.inner').after('<p>Test</p>');
   })
 

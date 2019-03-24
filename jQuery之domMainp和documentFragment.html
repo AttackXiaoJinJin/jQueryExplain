@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery之domMainp和documentFragment</title>
+
+</head>
+<body>
+<script src="jQuery.js"></script>
+
+<button id="Button1"  onclick = "a1()">普通方式创建</button>
+<button id="Button2"   onclick = "a2()">documentFragment创建</button>
+<div id="test1"></div>
+
+<div id="test2"></div>
+<script type="text/javascript">
+  function a1() {
+    console.time("普通方式创建")
+    for (let i = 0; i < 5000; i++) {
+      let op = document.createElement("span");
+      let oText = document.createTextNode(i);
+      op.appendChild(oText);
+      document.body.appendChild(op);
+    }
+    console.timeEnd("普通方式创建")
+
+  }
+
+  function a2() {
+    console.time("documentFragment创建")
+    let oFragmeng = document.createDocumentFragment(); //创建文档碎片
+    for (let i = 0; i < 5000; i++) {
+      let op = document.createElement("span");
+      let oText = document.createTextNode(i);
+      op.appendChild(oText);
+      oFragmeng.appendChild(op);
+    }
+    document.body.appendChild(oFragmeng); //最后一次性添加到document中
+    console.timeEnd("documentFragment创建")
+
+  }
+
+
+</script>
+<script type="text/javascript">
+  //源码5597行-5586行
+  //作用是将传入的参数（dom节点元素、字符串、函数）统一转化为符合要求的DOM节点
+  //例:$('.inner').append('<p>Test</p>')
+  //collections即$('.inner')
+  //args即<p>Test</p>
+  function domManip( collection, args, callback, ignored ) {
+    console.log(collection,args,'ignored5798')
+    // Flatten any nested arrays
+    //数组深复制成新的数组副本
+    /*也就是在这里，将arguments集合转化为DOM节点数组*/
+    args = concat.apply( [], args );
+    console.log(args,args[0],'args5808')
+    let fragment, first, scripts, hasScripts, node, doc,
+      i = 0,
+      //l 长度，比如类名为.inner的li有两组,2
+      l = collection.length,
+      //1
+      iNoClone = l - 1,
+      //即"<p>test1</p><div>test2</div>"
+      value = args[ 0 ],
+      //false
+      valueIsFunction = isFunction( value );
+
+    //We can't cloneNode fragments that contain checked, in WebKit
+    //我们无法在WebKit中克隆包含checked的节点片段
+    //$('.inner').append("<p>test1</p><div>test2</div>" )的话，这段不看
+    console.log(l,typeof value,!support.checkClone,rchecked.test( value ),'value5820')
+    //======================================================
+    if ( valueIsFunction ||
+      ( l > 1 && typeof value === "string" &&
+        !support.checkClone && rchecked.test( value ) ) ) {
+      console.log(value,'value5824')
+      return collection.each( function( index ) {
+          let self = collection.eq( index );
+          if ( valueIsFunction ) {
+            args[ 0 ] = value.call( this, index, self.html() );
+          }
+          domManip( self, args, callback, ignored );
+        }
+      )
+    }
+    //====================================================
+    //l=2
+    if ( l ) {
+      console.log(collection[0].ownerDocument,'ownerDocument5838')
+      //collection[ 0 ].ownerDocument:目标节点所属的文档
+      fragment = buildFragment( args, collection[ 0 ].ownerDocument, false, collection, ignored )
+      //first即<p>Test</p>
+      first = fragment.firstChild;
+      console.log(fragment,fragment.childNodes,first,'first5840')
+      //======不看================
+      if ( fragment.childNodes.length === 1 ) {
+        fragment = first;
+      }
+      //==========================
+
+      // Require either new content or an interest in ignored elements to invoke the callback
+      if ( first || ignored ) {
+        scripts = jQuery.map( getAll( fragment, "script" ), disableScript );
+        console.log(scripts,scripts.length,'scripts5851')
+        //false
+        hasScripts = scripts.length;
+
+        // Use the original fragment for the last item
+        // instead of the first because it can end up
+        // being emptied incorrectly in certain situations (#8070).
+        //=====根据collection的长度循环操作========
+
+        for ( ; i < l; i++ ) {
+          console.log(node,fragment.childNodes,'childNodes5880')
+
+          node = fragment;
+          //=====不看=========
+          if ( i !== iNoClone ) {
+            node = jQuery.clone( node, true, true );
+            console.log(i,iNoClone,'iNoClone5884')
+            // Keep references to cloned scripts for later restoration
+            if ( hasScripts ) {
+              // Support: Android <=4.0 only, PhantomJS 1 only
+              // push.apply(_, arraylike) throws on ancient WebKit
+              jQuery.merge( scripts, getAll( node, "script" ) );
+            }
+          }
+          //=================
+
+          console.log(collection[i],node.childNodes,'node5874') //<p>Test<p>,0
+          callback.call( collection[ i ], node, i );
+        }
+        //====================
+        //=========不看========
+        if ( hasScripts ) {
+          doc = scripts[ scripts.length - 1 ].ownerDocument;
+
+          // Reenable scripts
+          jQuery.map( scripts, restoreScript );
+
+          // Evaluate executable scripts on first document insertion
+          for ( i = 0; i < hasScripts; i++ ) {
+            node = scripts[ i ];
+            if ( rscriptType.test( node.type || "" ) &&
+              !dataPriv.access( node, "globalEval" ) &&
+              jQuery.contains( doc, node ) ) {
+
+              if ( node.src && ( node.type || "" ).toLowerCase()  !== "module" ) {
+
+                // Optional AJAX dependency, but won't run scripts if not present
+                if ( jQuery._evalUrl ) {
+                  jQuery._evalUrl( node.src );
+                }
+              } else {
+                DOMEval( node.textContent.replace( rcleanScript, "" ), doc, node );
+              }
+            }
+          }
+        }
+        //========================
+
+      }
+    }
+    console.log(collection,'collection5929')
+    return collection;
+  }
+
+
+  //源码5724行-5733行
+  //额外判断，当在table插入一个tr时，需要先插入tbody，再插入tr
+  //this, node
+  function manipulationTarget( elem, node ) {
+    // 如果是table里面插入行tr
+    if ( nodeName( elem, "table" ) &&
+      nodeName( node.nodeType !== 11 ? node : node.firstChild, "tr" ) ) {
+      return jQuery( elem ).children( "tbody" )[ 0 ] || elem
+    }
+
+    return elem
+  }
+
+  //源码2843行-2847行
+  //判断elemt的nodeName是否和name相同，返回true/false
+  function nodeName( elem, name ) {
+    return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
+  }
+
+  //源码4857行-4945行
+  //args, collection[ 0 ].ownerDocument, false, collection
+  function buildFragment( elems, context, scripts, selection, ignored ) {
+    let elem, tmp, tag, wrap, contains, j,
+      // createdocumentfragment()方法创建了一虚拟的节点对象，节点对象包含所有属性和方法。
+      //相当于document.createDocumentFragment()
+      fragment = context.createDocumentFragment(),
+      nodes = [],
+      i = 0,
+      l = elems.length;
+
+    for ( ; i < l; i++ ) {
+      console.log(elems,elems[ i ],'elem4868')
+      elem = elems[ i ];
+
+      if ( elem || elem === 0 ) {
+        console.log( toType( elem ),!rhtml.test( elem ),'rhtml4870') //string false
+        // Add nodes directly
+        if ( toType( elem ) === "object" ) {
+
+          // Support: Android <=4.0 only, PhantomJS 1 only
+          // push.apply(_, arraylike) throws on ancient WebKit
+          jQuery.merge( nodes, elem.nodeType ? [ elem ] : elem );
+
+          // Convert non-html into a text node
+        } else if ( !rhtml.test( elem ) ) {
+          nodes.push( context.createTextNode( elem ) );
+
+          // Convert html into DOM nodes
+        } else {
+          //在虚拟节点中添加div子元素
+          tmp = tmp || fragment.appendChild( context.createElement( "div" ) );
+
+          // Deserialize a standard representation
+          //反序列化标准表示
+          //tag:div
+          //elem:<p>test1</p><div>test2</div>
+
+          //就是匹配 <div 的，没有就是空字符串 ''
+          tag = ( rtagName.exec( elem ) || [ "", "" ] )[ 1 ].toLowerCase();
+          console.log(rtagName.exec( elem ),'rtagName4891') //null,只匹配 <div
+          console.log(tag,'rtagName4892') //null,只匹配 <div
+          console.log(tag,elem,rtagName.exec( elem ),'rtagName4894')
+          // [ 0, "", "" ]
+          wrap = wrapMap[ tag ] || wrapMap._default;
+          tmp.innerHTML = wrap[ 1 ] + jQuery.htmlPrefilter( elem ) + wrap[ 2 ];
+
+          // Descend through wrappers to the right content
+          j = wrap[ 0 ];
+          while ( j-- ) {
+            tmp = tmp.lastChild;
+          }
+
+          // Support: Android <=4.0 only, PhantomJS 1 only
+          // push.apply(_, arraylike) throws on ancient WebKit
+          console.log(nodes,tmp.childNodes,tmp,'childNodes4911')
+          jQuery.merge( nodes, tmp.childNodes );
+
+          // Remember the top-level container
+          tmp = fragment.firstChild;
+
+          // Ensure the created nodes are orphaned (#12392)
+          tmp.textContent = "";
+        }
+      }
+    }
+
+    // Remove wrapper from fragment
+    fragment.textContent = "";
+    //nodes:[p,div]
+
+    i = 0;
+    console.log(tmp,fragment,nodes,i,'nodes4924')
+    while ( ( elem = nodes[ i++ ] ) ) {
+
+      // Skip elements already in the context collection (trac-4087)
+      if ( selection && jQuery.inArray( elem, selection ) > -1 ) {
+        if ( ignored ) {
+          ignored.push( elem );
+        }
+        continue;
+      }
+
+      contains = jQuery.contains( elem.ownerDocument, elem );
+      console.log(1111,'fragment4939')
+      // Append to fragment
+      tmp = getAll( fragment.appendChild( elem ), "script" );
+      console.log(tmp,contains,'tmp4940')
+      // Preserve script evaluation history
+      if ( contains ) {
+        setGlobalEval( tmp );
+      }
+
+      // Capture executables
+      if ( scripts ) {
+        j = 0;
+        while ( ( elem = tmp[ j++ ] ) ) {
+          if ( rscriptType.test( elem.type || "" ) ) {
+            scripts.push( elem );
+          }
+        }
+      }
+    }
+    console.log(fragment.childNodes[1],'fragment4957')
+    return fragment;
+  }
+
+
+
+</script>
+</body>
+</html>
