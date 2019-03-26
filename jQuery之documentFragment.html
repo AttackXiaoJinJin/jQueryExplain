@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery之domMainp和documentFragment</title>
+
+</head>
+<body>
+<script src="jQuery.js"></script>
+
+<button id="Button1"  onclick = "a1()">普通方式创建</button>
+<button id="Button2"   onclick = "a2()">documentFragment创建</button>
+<div id="test1"></div>
+
+<div id="test2"></div>
+<script type="text/javascript">
+  function a1() {
+    console.time("普通方式创建")
+    for (let i = 0; i < 5000; i++) {
+      let op = document.createElement("span");
+      let oText = document.createTextNode(i);
+      op.appendChild(oText);
+      document.body.appendChild(op);
+    }
+    console.timeEnd("普通方式创建")
+
+  }
+
+  function a2() {
+    console.time("documentFragment创建")
+    let oFragmeng = document.createDocumentFragment(); //创建文档碎片
+    for (let i = 0; i < 5000; i++) {
+      let op = document.createElement("span");
+      let oText = document.createTextNode(i);
+      op.appendChild(oText);
+      oFragmeng.appendChild(op);
+    }
+    document.body.appendChild(oFragmeng); //最后一次性添加到document中
+    console.timeEnd("documentFragment创建")
+
+  }
+
+
+</script>
+</body>
+</html>

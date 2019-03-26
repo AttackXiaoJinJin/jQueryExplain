@@ -4877,19 +4877,24 @@
       if ( elem || elem === 0 ) {
         console.log( toType( elem ),!rhtml.test( elem ),'rhtml4870') //string false
         // Add nodes directly
+        //如果要添加的元素是jQuery对象，如 $('.inner').append($("#greet"))
+        //或者是DOM对象，如 $('.inner').append(document.getElementById("greet"));
         if ( toType( elem ) === "object" ) {
-            
+
           // Support: Android <=4.0 only, PhantomJS 1 only
           // push.apply(_, arraylike) throws on ancient WebKit
           jQuery.merge( nodes, elem.nodeType ? [ elem ] : elem );
 
           // Convert non-html into a text node
-        } else if ( !rhtml.test( elem ) ) {
+        }
+      //没有html结构，而是一个文本节点
+      else if ( !rhtml.test( elem ) ) {
           nodes.push( context.createTextNode( elem ) );
-
           // Convert html into DOM nodes
-        } else {
-          //在虚拟节点中添加div子元素
+        }
+      //如果要添加的元素是字符串，如 $('.inner').append('<p>test1</p><div>test2</div>')
+      else {
+          //创建一个div容器
           /*创建div是为了处理innerHTML的缺陷（IE会忽略开头的无作用域元素），
           让所有的元素都被div元素给包含起来，包括script，style等无作用域的元素*/
           tmp = tmp || fragment.appendChild( context.createElement( "div" ) );
@@ -4907,12 +4912,16 @@
           console.log(tag,elem,rtagName.exec( elem ),'rtagName4894')
             // [ 0, "", "" ]
           /*作用就是利用wrapMap让不支持innerHTML的元素通过包装wrap来支持innerHTML*/
+          //ie对字符串进行trimLeft操作，其余是用户输入处理
+          //很多标签不能单独作为DIV的子元素
+          //td,th,tr,tfoot,tbody等等,需要加头尾
           wrap = wrapMap[ tag ] || wrapMap._default;
           //将修正好的element添加进innerHTML中
           //jQuery.htmlPrefilter:标签转换为闭合标签，如<table> --> <table></table>
           tmp.innerHTML = wrap[ 1 ] + jQuery.htmlPrefilter( elem ) + wrap[ 2 ];
           
           // Descend through wrappers to the right content
+          // 因为warp被包装过，需要找到正确的元素父级
           j = wrap[ 0 ];
           while ( j-- ) {
             tmp = tmp.lastChild;
@@ -4921,6 +4930,7 @@
           // Support: Android <=4.0 only, PhantomJS 1 only
           // push.apply(_, arraylike) throws on ancient WebKit
           console.log(nodes,tmp.childNodes,tmp,'childNodes4911')
+          // 把节点拷贝到nodes数组中去
           jQuery.merge( nodes, tmp.childNodes );
 
           // Remember the top-level container
@@ -5833,7 +5843,12 @@
     /*也就是在这里，将arguments集合转化为DOM节点数组*/
     args = concat.apply( [], args );
     console.log(args,args[0],'args5808')
-    var fragment, first, scripts, hasScripts, node, doc,
+    var fragment,
+      first,
+      scripts,
+      hasScripts,
+      node,
+      doc,
       i = 0,
       //l 长度，比如类名为.inner的li有两组,2
       l = collection.length,
@@ -5894,8 +5909,9 @@
           console.log(node,fragment.childNodes,'childNodes5880')
 
           node = fragment;
-          //=====不看=========
           if ( i !== iNoClone ) {
+            /*createDocumentFragment创建的元素是一次性的，添加之后再就不能操作了，
+            所以需要克隆iNoClone的多个节点*/
             node = jQuery.clone( node, true, true );
             console.log(i,iNoClone,'iNoClone5884')
             // Keep references to cloned scripts for later restoration
@@ -5905,13 +5921,11 @@
               jQuery.merge( scripts, getAll( node, "script" ) );
             }
           }
-          //=================
 
           console.log(collection[i],node.childNodes,'node5874') //<p>Test<p>,0
           callback.call( collection[ i ], node, i );
         }
         //====================
-        //=========不看========
         //如果有<script>标签，就解析script
         if ( hasScripts ) {
           doc = scripts[ scripts.length - 1 ].ownerDocument;
@@ -5938,7 +5952,7 @@
             }
           }
         }
-        //========================
+
         
       }
     }
@@ -6051,10 +6065,12 @@
   } );
 
   jQuery.fn.extend( {
+    //移除被选元素，包括所有的文本和子节点，但会保留移除元素的副本，允许它们在以后被重新插入。
+    //注意那个 keepData:true
     detach: function( selector ) {
       return remove( this, selector, true );
     },
-
+    //移除被选元素，包括所有的文本和子节点，不会保留移除元素的副本
     remove: function( selector ) {
       return remove( this, selector );
     },
@@ -6071,6 +6087,7 @@
       }, null, value, arguments.length );
     },
     /*append的内部的原理，就是通过创建一个文档碎片，把新增的节点放到文档碎片中，通过文档碎片克隆到到页面上去，目的是效率更高*/
+    //在被选元素内部的结尾插入指定内容
     append: function() {
       //执行append后，调用了domManip方法
       //domManip()是jQuery DOM操作的核心函数
@@ -6095,16 +6112,17 @@
       }
       )
     },
-
+    //在被选元素内部的开头插入指定内容
     prepend: function() {
       return domManip( this, arguments, function( elem ) {
         if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
           var target = manipulationTarget( this, elem );
+
           target.insertBefore( elem, target.firstChild );
         }
       } );
     },
-
+    //在被选元素之前插入指定的内容
     before: function() {
       return domManip( this, arguments, function( elem ) {
         if ( this.parentNode ) {
@@ -6112,7 +6130,7 @@
         }
       } );
     },
-
+    //在被选元素之后插入指定的内容
     after: function() {
       return domManip( this, arguments, function( elem ) {
         if ( this.parentNode ) {
