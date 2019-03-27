@@ -7,25 +7,41 @@
 </head>
 <body>
 <script src="jQuery.js"></script>
-<!--<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>-->
   <button id="test1">append操作</button>
 
-<h2 id="greet">Greetings</h2>
-<div class="container">
-  <!--<table class="inner">Hello</table>-->
-  <!--<table class="inner"></table>-->
-  <table id="inner1"></table>
-  <!--<div class="inner">Hello</div>-->
-  <!--<div class="inner">Goodbye</div>-->
-  <div class="inner"></div>
-</div>
+  <table class="inner">
+    <!--<tbody></tbody>-->
+  </table>
+
 
 <script>
+  //匹配div不支持的标签，如 tr、td等
+  let rtagName = ( /<([a-z][^\/\0>\x20\t\r\n\f]+)/i );
+  //================================
+  let wrapMap = {
+    // Support: IE <=9 only
+    option: [ 1, "<select multiple='multiple'>", "</select>" ],
+    // XHTML parsers do not magically insert elements in the
+    // same way that tag soup parsers do. So we cannot shorten
+    // this by omitting <tbody> or other required elements.
+    thead: [ 1, "<table>", "</table>" ],
+    col: [ 2, "<table><colgroup>", "</colgroup></table>" ],
+    tr: [ 2, "<table><tbody>", "</tbody></table>" ],
+    td: [ 3, "<table><tbody><tr>", "</tr></tbody></table>" ],
+    _default: [ 0, "", "" ]
+  };
+
+  // Support: IE <=9 only
+  wrapMap.optgroup = wrapMap.option;
+  wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
+  wrapMap.th = wrapMap.td;
+  //================================
+
   //源码5597行-5586行
   //作用是将传入的参数（dom节点元素、字符串、函数）统一转化为符合要求的DOM节点
-  //例:$('.inner').append('<p>Test</p>')
+  //例:$('.inner').append('<tr><td>test1</tr></td>')
   //nodelist(collections)即$('.inner')
-  //args即<p>Test</p>
+  //args即<tr><td>test1</td></tr>
   function domManip( nodelist, args, callback ) {
     console.log(nodelist,args,'ignored5798')
     //数组深复制成新的数组副本
@@ -42,6 +58,7 @@
       l = nodelist.length,
       iNoClone = l - 1
     //l=2
+    console.log(l,'lll45')
     if ( l ) {
       console.log(argsArr,nodelist[0].ownerDocument,nodelist,'firstChild40')
       //argsArr:<p>Test</p>
@@ -72,7 +89,7 @@
   }
 
   //源码5724行-5733行
-  //额外判断，当在table插入一个tr时，需要先插入tbody，再插入tr
+  //额外判断，当选择器是table，并且插入的元素是tr时，会查找到table下的tbody，并返回tbody
   //this, node
   function manipulationTarget( selector, node ) {
     console.log(node.childNodes,node.firstChild,'node73')
@@ -85,10 +102,8 @@
   }
 
   //源码2843行-2847行
-  //判断selector是否是table，返回true/false
-  //判断arguments是否是tr，返回true/false
+  //判断两个参数的nodename是否相等
   function nodeName( selector, name ) {
-    console.log(selector.nodeName.toLowerCase(),name.toLowerCase(),'name85')
     return selector.nodeName && selector.nodeName.toLowerCase() === name.toLowerCase();
   }
 
@@ -100,7 +115,7 @@
   比如：先将新添加的100个节点添加到文档碎片的innerHTML上，再将文档碎片添加到DOM上。*/
   //args, collection[ 0 ].ownerDocument, false, collection
   function buildFragment( arr, context, truefalse, selection ) {
-    let elem,tmp, nodes = [], i = 0, l = arr.length
+    let elem,tmp, nodes = [], i = 0, l = arr.length,wrap,tag,j
     // createdocumentfragment()方法创建了一虚拟的节点对象，节点对象包含所有属性和方法。
     //相当于document.createDocumentFragment()
     let fragment = context.createDocumentFragment()
@@ -108,18 +123,36 @@
     console.log(l,'l87')
     //==============
     for ( ; i < l; i++ ) {
-      //"<p>test1</p><div>test2</div>"
+      //'<tr><td></td></tr>'
       elem = arr[ i ];
       console.log(i,elem,'elem90')
       if ( elem || elem === 0 ) {
         /*创建div是为了处理innerHTML的缺陷（IE会忽略开头的无作用域元素），
           让所有的元素都被div元素给包含起来，包括script，style等无作用域的元素*/
         tmp=fragment.appendChild( context.createElement( "div" ) )
-        console.log(elem,'arr114')
+        //就是匹配div不支持的标签，如 tr、td等
+        /*不支持innerHTML属性的元素，通过正则单独取出处理*/
+        tag = ( rtagName.exec( elem ) || [ "", "" ] )[ 1 ].toLowerCase();
+
+        /*作用就是利用wrapMap让不支持innerHTML的元素通过包装wrap来支持innerHTML*/
+        //ie对字符串进行trimLeft操作，其余是用户输入处理
+        //很多标签不能单独作为DIV的子元素
+        /*td,th,tr,tfoot,tbody等等,需要加头尾*/
+        wrap = wrapMap[ tag ] || wrapMap._default // tr: [ 2, "<table><tbody>", "</tbody></table>" ]
+        console.log(wrap,'wrap152')
         //将修正好的element添加进innerHTML中
-        // tmp.innerHTML =jQuery.htmlPrefilter(elem)
-        tmp.innerHTML =jQuery.htmlPrefilter('<div><tr>test1</tr></div>')
-        console.log(jQuery.htmlPrefilter('<div><tr>test1</tr></div>'),tmp.innerHTML,'elem117')
+        //jQuery.htmlPrefilter:标签转换为闭合标签，如<table> --> <table></table>
+        /*div不支持tr、td所以需要添加头尾标签，如<div><table><tbody>xxxx</tbody></table>*/
+        tmp.innerHTML = wrap[ 1 ] + jQuery.htmlPrefilter( elem ) + wrap[ 2 ];
+        // 因为warp被包装过，需要找到正确的元素父级
+        j = wrap[ 0 ]; //2
+        while ( j-- ) {
+          tmp = tmp.lastChild;
+        }
+        //temp:<tbody></tbody>
+        //tmp.childNodes:tr
+        //nodes:[]
+        //jQuery.merge:将两个数组合并到第一个数组中
         jQuery.merge( nodes, tmp.childNodes );
       }
     }
@@ -128,7 +161,6 @@
     fragment.textContent = "";
     //需要将i重置为0
     i=0
-    console.log(nodes,i,'i100')
     while ( ( elem = nodes[ i++ ] ) ) {
       fragment.appendChild( elem )
     }
@@ -139,19 +171,20 @@
 
   let ajQuery={}
   jQuery.each({
-      //例:'<p>Test</p>'
+      //例:'<tr><td>test1</td></tr>'
       //源码6011行-6019行
       // 在被选元素的结尾插入指定内容
       /*append的内部的原理，就是通过创建一个文档碎片，把新增的节点放到文档碎片中，通过文档碎片克隆到到页面上去，目的是效率更高*/
       append: function(nodelist, arguments) {
         //node是由domManip处理得到的文档碎片documentFragment，里面包含要插入的DOM节点
         let callbackOne=function( node ) {
+          console.log(node,'node149')
           //this指的就是$("xxx")
           //1:元素节点,11:DocumentFragment,9:document
           if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
             //table插入tr的额外判断
             //target默认情况是selector，即document.querySelectorAll(".inner")
-            let target = manipulationTarget( this, node );
+            let target = manipulationTarget( this, node )
             console.log(target,node.childNodes,'node147')
             //append的本质即使用原生appendChild方法在被选元素内部的结尾插入指定内容
             target.appendChild( node );
@@ -176,17 +209,18 @@
 
 
   $('#test1').click(function(){
+    // let innerArr=document.querySelectorAll(".inner")
     let innerArr=document.querySelectorAll(".inner")
     // ajQuery.append(innerArr,'<p>test1</p><div>test2</div>')
-    // ajQuery.append(innerArr,'<tr>test1</tr>')
-    document.querySelector("#inner1").innerHTML ='<tr>test1</tr>'
-    console.log(document.querySelector("#inner1").innerHTML,'inner182')
+    ajQuery.append(innerArr,'<tr><td>test1</td></tr>')
+    // document.querySelector("#inner1").innerHTML ='<tr><td>test1</td></tr>'
+    // console.log(document.querySelector("#inner1").innerHTML,'inner182')
     
     // ajQuery.append(innerArr,'<table>test1</table>')
     // ajQuery.append(innerArr,"<script>alert('append执行script')")
 
     // $('.inner').append('<p>test1</p><div>test2</div>');
-    // $('.inner').append('<tr>test1</tr>');
+    // $('.inner').append('<tr><td>test1</td></tr>');
     // $('.inner').append($("#greet"));
     // $('.inner').append(document.getElementById("greet"));
     // let a=document.getElementById("greet").innerText

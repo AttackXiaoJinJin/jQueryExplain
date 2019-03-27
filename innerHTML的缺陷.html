@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>innerHTML的缺陷</title>
+</head>
+<body>
+<!--<script src="jQuery.js"></script>-->
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<table class="tableOne">
+  <tbody></tbody>
+</table>
+
+<script>
+  window.onload=function () {
+    // let a=document.createElement("TR")
+    // a.appendChild(document.createTextNode("Water"))
+    // console.log(a)
+    // document.querySelector("#tableOne").innerHTML="<tr>tr行</tr>"
+    // document.querySelector("#tbodyOne").innerHTML="<tr><td>萨德</td></tr>"
+    // document.querySelector("#tableOne").innerHTML="<tr><td>嘿嘿</td></tr>"
+    // let a=$(".tableOne").children( "tbody" )
+    // console.log(a)
+    // document.querySelector("#tbodyOne").appendChild(a)
+    $(".tableOne").append("<tr><td>嘿嘿</td></tr>")
+    // $("#tableOne").append("<td>萨德</td>")
+
+
+
+  }
+
+
+</script>
+</body>
+</html>

@@ -4782,7 +4782,7 @@
     }
   } );
   var rcheckableType = ( /^(?:checkbox|radio)$/i );
-  //匹配的是 <div 这一部分
+  //匹配div不支持的标签，如 tr、td等
   var rtagName = ( /<([a-z][^\/\0>\x20\t\r\n\f]+)/i );
 
   var rscriptType = ( /^$|^module$|\/(?:java|ecma)script/i );
@@ -4892,7 +4892,7 @@
           nodes.push( context.createTextNode( elem ) );
           // Convert html into DOM nodes
         }
-      //如果要添加的元素是字符串，如 $('.inner').append('<p>test1</p><div>test2</div>')
+      //如果要添加的元素是字符串，如 $('.inner').append('<tr><td>test1</td></tr>')
       else {
           //创建一个div容器
           /*创建div是为了处理innerHTML的缺陷（IE会忽略开头的无作用域元素），
@@ -4904,7 +4904,7 @@
           //tag:div
           //elem:<p>test1</p><div>test2</div>
 
-          //就是匹配 <div 的，没有就是空字符串 ''
+          //就是匹配div不支持的标签，如 tr、td等
           /*不支持innerHTML属性的元素，通过正则单独取出处理*/
           tag = ( rtagName.exec( elem ) || [ "", "" ] )[ 1 ].toLowerCase();
           console.log(rtagName.exec( elem ),'rtagName4891') //null,只匹配 <div
@@ -4919,7 +4919,7 @@
           //将修正好的element添加进innerHTML中
           //jQuery.htmlPrefilter:标签转换为闭合标签，如<table> --> <table></table>
           tmp.innerHTML = wrap[ 1 ] + jQuery.htmlPrefilter( elem ) + wrap[ 2 ];
-          
+          console.log(wrap[ 1 ] + jQuery.htmlPrefilter( elem ) + wrap[ 2 ],'wrap4922')
           // Descend through wrappers to the right content
           // 因为warp被包装过，需要找到正确的元素父级
           j = wrap[ 0 ];
