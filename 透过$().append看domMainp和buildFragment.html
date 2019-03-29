@@ -209,26 +209,16 @@
 
 
   $('#test1').click(function(){
-    // let innerArr=document.querySelectorAll(".inner")
     let innerArr=document.querySelectorAll(".inner")
-    // ajQuery.append(innerArr,'<p>test1</p><div>test2</div>')
-    ajQuery.append(innerArr,'<tr><td>test1</td></tr>')
-    // document.querySelector("#inner1").innerHTML ='<tr><td>test1</td></tr>'
-    // console.log(document.querySelector("#inner1").innerHTML,'inner182')
-    
-    // ajQuery.append(innerArr,'<table>test1</table>')
+    // ajQuery.append(innerArr,'<tr><td>test1</td></tr>')
     // ajQuery.append(innerArr,"<script>alert('append执行script')")
 
-    // $('.inner').append('<p>test1</p><div>test2</div>');
-    // $('.inner').append('<tr><td>test1</td></tr>');
-    // $('.inner').append($("#greet"));
-    // $('.inner').append(document.getElementById("greet"));
-    // let a=document.getElementById("greet").innerText
-    // $('.inner').append(a);
-
     /*$.append() 会执行script*/
-    // $('.inner').append("<script>alert('append执行script')");
+    $('.inner').append("<script>alert('append执行script')")
 
+    // let script = document.createElement( "script" )
+    // script.text = "alert('append执行script')"
+    // document.head.appendChild( script ).parentNode.removeChild( script );
 
   })
 

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery之script解析</title>
+</head>
+<body>
+<script src="jQuery.js"></script>
+<div class="inner"></div>
+
+<script>
+  // https://segmentfault.com/q/1010000007824818
+  //清除注释语句
+  let rcleanScript = /^\s*<!(?:\[CDATA\[|--)|(?:\]\]|--)>\s*$/g;
+  //判断type是否是ecmascript或者javascript
+  let rscriptType = (/^$|^module$|\/(?:java|ecma)script/i);
+  // 生成一个唯一的id，用于数据缓存
+  function Data() {
+    this.expando = jQuery.expando + Data.uid++;
+  }
+  let dataPriv = new Data()
+  console.log(dataPriv,'dataPriv20')
+  //去除type标签
+  function restoreScript( elem ) {
+    if ( ( elem.type || "" ).slice( 0, 5 ) === "true/" ) {
+      elem.type = elem.type.slice( 5 );
+    } else {
+      elem.removeAttribute( "type" );
+    }
+
+    return elem;
+  }
+
+  function getAll(context, tag) {
+
+    // Support: IE <=9 - 11 only
+    // Use typeof to avoid zero-argument method invocation on host objects (#15151)
+    var ret;
+
+    if (typeof context.getElementsByTagName !== "undefined") {
+      ret = context.getElementsByTagName(tag || "*");
+
+    } else if (typeof context.querySelectorAll !== "undefined") {
+      ret = context.querySelectorAll(tag || "*");
+
+    } else {
+      ret = [];
+    }
+
+    if (tag === undefined || tag && nodeName(context, tag)) {
+      return jQuery.merge([context], ret);
+    }
+
+    return ret;
+  }
+
+  //重置type属性，以进行安全的DOM操作
+  //type = "text/javascript"--> type=""
+  function disableScript(elem) {
+    // console.log(elem,elem.getAttribute("type"),elem.type,'type5794') //<script>alert('xxx')</ script> null ""
+    elem.type = (elem.getAttribute("type") !== null) + "/" + elem.type;
+    // console.log(elem,'elem5796')
+    return elem;
+  }
+
+  let preservedScriptAttributes = {
+    type: true,
+    src: true,
+    noModule: true
+  };
+
+
+  //解析script标签
+  //code:alert('append执行script') #document
+  //doc:document
+  //node:<script>alert('append执行script')< /script>
+  function DOMEval(code, doc, node) {
+    doc = doc || document;
+    let i
+    //创建script标签
+    let script = doc.createElement("script")
+    //添加文本
+    script.text = code;
+    if (node) {
+      //i:type/src/noModule
+      for (i in preservedScriptAttributes) {
+        if (node[i]) {
+          script[i] = node[i];
+
+        }
+      }
+    }
+    //解析script核心代码
+    doc.head.appendChild(script).parentNode.removeChild(script);
+  }
+
+  function buildFragment(elems, context, scripts, selection, ignored) {
+    var elem, tmp, tag, wrap, contains, j,
+      fragment = context.createDocumentFragment(),
+      nodes = [],
+      i = 0,
+      l = elems.length;
+
+    for (; i < l; i++) {
+      elem = elems[i];
+      if (elem || elem === 0) {
+        if (toType(elem) === "object") {
+          jQuery.merge(nodes, elem.nodeType ? [elem] : elem);
+        }
+        //没有html结构，而是一个文本节点
+        else if (!rhtml.test(elem)) {
+          nodes.push(context.createTextNode(elem));
+        } else {
+          tmp = tmp || fragment.appendChild(context.createElement("div"));
+          tag = (rtagName.exec(elem) || ["", ""])[1].toLowerCase();
+          wrap = wrapMap[tag] || wrapMap._default;
+          tmp.innerHTML = wrap[1] + jQuery.htmlPrefilter(elem) + wrap[2];
+          j = wrap[0];
+          while (j--) {
+            tmp = tmp.lastChild;
+          }
+          jQuery.merge(nodes, tmp.childNodes);
+          tmp = fragment.firstChild;
+          tmp.textContent = "";
+        }
+      }
+    }
+    fragment.textContent = "";
+
+
+    i = 0;
+    console.log(tmp, fragment, nodes, i, 'nodes4924')
+    while ((elem = nodes[i++])) {
+
+      // Skip elements already in the context collection (trac-4087)
+      if (selection && jQuery.inArray(elem, selection) > -1) {
+        if (ignored) {
+          ignored.push(elem);
+        }
+        continue;
+      }
+
+      contains = jQuery.contains(elem.ownerDocument, elem);
+      console.log(1111, 'fragment4939')
+      // Append to fragment
+      tmp = getAll(fragment.appendChild(elem), "script");
+      console.log(tmp, contains, 'tmp4940')
+    }
+    console.log(fragment.childNodes[1], 'fragment4957')
+    return fragment;
+  }
+
+  function domManip(collection, args, callback, ignored) {
+    args = concat.apply([], args);
+    var fragment,
+      first,
+      scripts,
+      hasScripts,
+      node,
+      doc,
+      i = 0,
+      l = collection.length,
+      iNoClone = l - 1,
+      value = args[0]
+
+    fragment = buildFragment(args, collection[0].ownerDocument, false, collection, ignored)
+    first = fragment.firstChild
+    if (fragment.childNodes.length === 1) {
+      fragment = first;
+    }
+    scripts = jQuery.map(getAll(fragment, "script"), disableScript); //script 1
+    /*判断是否包含<script>标签*/
+    hasScripts = scripts.length
+    //根据selector的个数循环
+    for (; i < l; i++) {
+
+      node = fragment;
+      if ( i !== iNoClone ) {
+        node = jQuery.clone(node, true, true);
+        //如果有script标签了，就将其复制到scripts中
+        if (hasScripts) {
+          jQuery.merge(scripts, getAll(node, "script"));
+        }
+      }
+
+      //此时的node已经是文本节点了
+      callback.call(collection[i], node, i);
+    }
+    //如果有<script>标签，就解析script
+    if (hasScripts) {
+      console.log(scripts, 'scripts5932') //script
+      doc = scripts[scripts.length - 1].ownerDocument; //document
+
+      jQuery.map(scripts, restoreScript);
+      for (i = 0; i < hasScripts; i++) {
+        node = scripts[i];
+
+        if (rscriptType.test(node.type || "") &&
+          //https://www.cnblogs.com/gongshunkai/p/5905917.html
+          !dataPriv.access(node, "globalEval") &&
+
+          jQuery.contains(doc, node)) {
+          //这边是处理<script scr=''>的情况的
+          if (node.src && (node.type || "").toLowerCase() !== "module") {
+            // Optional AJAX dependency, but won't run scripts if not present
+            if (jQuery._evalUrl) {
+              console.log('_evalUrl', '_evalUrl5950')
+              jQuery._evalUrl(node.src);
+            }
+          }
+          //一般走的这边
+          else {
+            console.log(doc, node.nodeType,node, 'DOMEval5954') //document 1 <script>alert('append执行script')< /script>
+            DOMEval(node.textContent.replace(rcleanScript, ""), doc, node);
+          }
+        }
+      }
+    }
+
+
+    return collection;
+  }
+
+
+  $('.inner').append("<script>alert('append执行script')")
+  // $('.inner').append("<span>aaa</span>")
+
+
+</script>
+</body>
+</html>

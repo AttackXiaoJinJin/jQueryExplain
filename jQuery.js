@@ -96,18 +96,34 @@
     noModule: true
   };
 
+  //解析script标签
+  //code:alert('append执行script') #document
+  //doc:document
+  //node:<script>alert('append执行script')</script>
   function DOMEval( code, doc, node ) {
+
     doc = doc || document;
 
-    var i,
-      script = doc.createElement( "script" );
-
+    let i,
+      //创建script标签
+      script = doc.createElement( "script" )
+    //<script>alert('append执行script')</script>
     script.text = code;
     if ( node ) {
+      // var preservedScriptAttributes = {
+      //   type: true,
+      //   src: true,
+      //   noModule: true
+      // };
+      //i:type/src/noModule
       for ( i in preservedScriptAttributes ) {
+        
         if ( node[ i ] ) {
+          console.log(node[i],'nodei122')
           script[ i ] = node[ i ];
+          
         }
+        console.log('aaa','node126')
       }
     }
     doc.head.appendChild( script ).parentNode.removeChild( script );
@@ -4831,9 +4847,9 @@
     }
 
     if ( tag === undefined || tag && nodeName( context, tag ) ) {
+
       return jQuery.merge( [ context ], ret );
     }
-
     return ret;
   }
 
@@ -4880,7 +4896,7 @@
         //如果要添加的元素是jQuery对象，如 $('.inner').append($("#greet"))
         //或者是DOM对象，如 $('.inner').append(document.getElementById("greet"));
         if ( toType( elem ) === "object" ) {
-
+          console.log('object','object4899')
           // Support: Android <=4.0 only, PhantomJS 1 only
           // push.apply(_, arraylike) throws on ancient WebKit
           jQuery.merge( nodes, elem.nodeType ? [ elem ] : elem );
@@ -4889,11 +4905,14 @@
         }
       //没有html结构，而是一个文本节点
       else if ( !rhtml.test( elem ) ) {
+          console.log('rhtml','rhtml4908')
+
           nodes.push( context.createTextNode( elem ) );
           // Convert html into DOM nodes
         }
       //如果要添加的元素是字符串，如 $('.inner').append('<tr><td>test1</td></tr>')
       else {
+          console.log('tmp','tmp4915')
           //创建一个div容器
           /*创建div是为了处理innerHTML的缺陷（IE会忽略开头的无作用域元素），
           让所有的元素都被div元素给包含起来，包括script，style等无作用域的元素*/
@@ -4967,7 +4986,6 @@
       if ( contains ) {
         setGlobalEval( tmp );
       }
-
       // Capture executables
       if ( scripts ) {
         j = 0;
@@ -4977,8 +4995,9 @@
           }
         }
       }
+
     }
-    console.log(fragment.childNodes[1],'fragment4957')
+    console.log(fragment.childNodes,'fragment4957')
     return fragment;
   }
 
@@ -5771,10 +5790,15 @@
   }
 
 // Replace/restore the type attribute of script elements for safe DOM manipulation
+  //重置type属性，以进行安全的DOM操作
+  //type = "text/javascript"--> type=""
   function disableScript( elem ) {
+    console.log(elem,elem.getAttribute("type"),elem.type,'type5794') //<script>alert('xxx')</script> null ""
     elem.type = ( elem.getAttribute( "type" ) !== null ) + "/" + elem.type;
+    console.log(elem,'elem5796')
     return elem;
   }
+  //去除type标签
   function restoreScript( elem ) {
     if ( ( elem.type || "" ).slice( 0, 5 ) === "true/" ) {
       elem.type = elem.type.slice( 5 );
@@ -5885,7 +5909,7 @@
       fragment = buildFragment( args, collection[ 0 ].ownerDocument, false, collection, ignored )
       //first即<p>Test</p>
       first = fragment.firstChild;
-      console.log(fragment,fragment.childNodes,first,'first5840')
+      console.log(fragment,fragment.childNodes,first,fragment.childNodes.length,fragment.children,'first5840')
       //======不看================
       if ( fragment.childNodes.length === 1 ) {
         fragment = first;
@@ -5894,11 +5918,12 @@
 
       // Require either new content or an interest in ignored elements to invoke the callback
       if ( first || ignored ) {
-        scripts = jQuery.map( getAll( fragment, "script" ), disableScript );
+        console.log(fragment,fragment.childNodes,'fragment5897') //<script>alert('append执行script')</script> text
+        scripts = jQuery.map( getAll( fragment, "script" ), disableScript ); //script 1
         console.log(scripts,scripts.length,'scripts5851')
         //false
         /*判断是否包含<script>标签*/
-        hasScripts = scripts.length;
+        hasScripts = scripts.length
         console.log(hasScripts,'hasScripts5886')
         // Use the original fragment for the last item
         // instead of the first because it can end up
@@ -5928,7 +5953,8 @@
         //====================
         //如果有<script>标签，就解析script
         if ( hasScripts ) {
-          doc = scripts[ scripts.length - 1 ].ownerDocument;
+          console.log(scripts,'scripts5932') //script
+          doc = scripts[ scripts.length - 1 ].ownerDocument; //document
 
           // Reenable scripts
           jQuery.map( scripts, restoreScript );
@@ -5936,17 +5962,21 @@
           // Evaluate executable scripts on first document insertion
           for ( i = 0; i < hasScripts; i++ ) {
             node = scripts[ i ];
+            console.log(node,'node5941')
             if ( rscriptType.test( node.type || "" ) &&
               !dataPriv.access( node, "globalEval" ) &&
               jQuery.contains( doc, node ) ) {
-
+              //这边是处理<script scr=''>的情况的
               if ( node.src && ( node.type || "" ).toLowerCase()  !== "module" ) {
-
+                
                 // Optional AJAX dependency, but won't run scripts if not present
                 if ( jQuery._evalUrl ) {
+                  console.log('_evalUrl','_evalUrl5950')
                   jQuery._evalUrl( node.src );
                 }
               } else {
+                console.log(doc,node.nodeType,'DOMEval5954') //document <script>alert('append执行script')</script>
+                //一般走的这边
                 DOMEval( node.textContent.replace( rcleanScript, "" ), doc, node );
               }
             }
@@ -6106,7 +6136,7 @@
           var target = manipulationTarget( this, elem );
           //target:$('.inner')的dom节点
           //elem:<p>Test</p>的dom节点
-          console.log(target,elem.childNodes,'target6016')
+          console.log(target,elem.firstChild.nodeType,'target6016')
           target.appendChild( elem );
         }
       }
