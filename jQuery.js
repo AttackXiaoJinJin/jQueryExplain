@@ -1647,22 +1647,34 @@
 
         if ( !nodeType ) {
           // If no nodeType, this is expected to be an array
+          //如果不存在nodeType属性的话，应该是一个数组
           while ( (node = elem[i++]) ) {
             // Do not traverse comment nodes
             ret += getText( node );
           }
-        } else if ( nodeType === 1 || nodeType === 9 || nodeType === 11 ) {
+        }
+        //元素节点、文档节点、文档碎片
+        else if ( nodeType === 1 || nodeType === 9 || nodeType === 11 ) {
           // Use textContent for elements
           // innerText usage removed for consistency of new lines (jQuery #11153)
+          //如果目标元素的子节点是文本节点，则直接返回
           if ( typeof elem.textContent === "string" ) {
+            /*jQuery没有用innerText获取文本的值，http://bugs.jquery.com/ticket/11153，
+            大概就是在IE8中新节点插入会保留所有回车。
+            所以jQuery采用了textContent获取文本值，
+            textContent本身是dom3规范的，可以兼容火狐下的innerText问题。*/
             return elem.textContent;
-          } else {
+          }
+          //如果子节点不是文本节点，则循环子节点，并依次获取它们的文本节点
+          else {
             // Traverse its children
             for ( elem = elem.firstChild; elem; elem = elem.nextSibling ) {
               ret += getText( elem );
             }
           }
-        } else if ( nodeType === 3 || nodeType === 4 ) {
+        }
+        //文本节点、一个文档的CDATA部分（没遇到过这个）
+        else if ( nodeType === 3 || nodeType === 4 ) {
           return elem.nodeValue;
         }
         // Do not include comment or processing instruction nodes
@@ -3301,6 +3313,8 @@
       return this.pushStack( matched );
     };
   } );
+  //匹配空白、水平制表符、回车、换行、换页
+  //源码3305行
   var rnothtmlwhite = ( /[^\x20\t\r\n\f]+/g );
 
 
@@ -4032,9 +4046,13 @@
 
 // Multifunctional method to get and set values of a collection
 // The value/s can optionally be executed if it's a function
+  
+  //$().html():access(this,function(),null,value,arguments.length)
   var access = function( elems, fn, key, value, chainable, emptyGet, raw ) {
     var i = 0,
+      //1
       len = elems.length,
+      //true
       bulk = key == null;
 
     // Sets many values
@@ -4046,21 +4064,29 @@
 
       // Sets one value
     } else if ( value !== undefined ) {
+      console.log('access->value!==undefined','value4053')
       chainable = true;
 
       if ( !isFunction( value ) ) {
+        //"Hello <b>world</b>!"不是一个方法
         raw = true;
       }
 
       if ( bulk ) {
 
         // Bulk operations run against the entire set
+        //走这边
         if ( raw ) {
+          // 将elems/selector,value传入function并执行
+          // call(this,param)
           fn.call( elems, value );
+          //这里将 function 置为空值后，就不会执行 if(fn)...了
           fn = null;
 
           // ...except when executing function values
-        } else {
+        }
+        //不走这边
+        else {
           bulk = fn;
           fn = function( elem, key, value ) {
             return bulk.call( jQuery( elem ), value );
@@ -4080,6 +4106,7 @@
     }
 
     if ( chainable ) {
+      console.log(elems,'elems4095')
       return elems;
     }
 
@@ -5235,11 +5262,16 @@
     },
 
     // Detach an event or set of events from an element
+    //将事件从元素节点中分离开来
+    //只传了 elem,type
+    //源码5255行
     remove: function( elem, types, handler, selector, mappedTypes ) {
 
       var j, origCount, tmp,
         events, t, handleObj,
-        special, handlers, type, namespaces, origType,
+        special, handlers, type,
+        namespaces, origType,
+
         elemData = dataPriv.hasData( elem ) && dataPriv.get( elem );
 
       if ( !elemData || !( events = elemData.events ) ) {
@@ -5247,6 +5279,7 @@
       }
 
       // Once for each type.namespace in types; type may be omitted
+      //rnothtmlwhite:匹配空白 水平制表符 回车 换行 换页
       types = ( types || "" ).match( rnothtmlwhite ) || [ "" ];
       t = types.length;
       while ( t-- ) {
@@ -5463,7 +5496,7 @@
         originalEvent :
         new jQuery.Event( originalEvent );
     },
-
+    // load/focus/blur/click/beforeunload/focusin/focusout/mouseenter/mouseleave/pointerenter/pointerleave
     special: {
       load: {
 
@@ -6061,19 +6094,29 @@
 
     cleanData: function( elems ) {
       var data, elem, type,
+        //load、focus、blur、click、beforeunload
         special = jQuery.event.special,
         i = 0;
-
+      console.log(special,'special6088')
       for ( ; ( elem = elems[ i ] ) !== undefined; i++ ) {
+
         if ( acceptData( elem ) ) {
+          //undefined
           if ( ( data = elem[ dataPriv.expando ] ) ) {
+            console.log(data,'data6092')
             if ( data.events ) {
               for ( type in data.events ) {
+                //如果selector绑定了load、focus、blur、click、beforeunload的事件的话
                 if ( special[ type ] ) {
+                  console.log(special[type],'special6096')
                   jQuery.event.remove( elem, type );
 
                   // This is a shortcut to avoid jQuery.event.remove's overhead
-                } else {
+                }
+                //比如mouseover、mouseout等
+                else {
+                  console.log(2222,'special6103')
+                  //本质即elem.removeEventListener(type,handle)
                   jQuery.removeEvent( elem, type, data.handle );
                 }
               }
@@ -6109,8 +6152,12 @@
       return access( this, function( value ) {
         return value === undefined ?
           jQuery.text( this ) :
+          //循环
           this.empty().each( function() {
+            //先清空目标元素的内容，然后再赋值
             if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
+              console.log(value,'value6159')
+              //如果包含标签的话，需要用html()方法，text()方法不会解析标签
               this.textContent = value;
             }
           } );
@@ -6196,33 +6243,49 @@
       } );
     },
 
+    // html()方法设置或返回被选元素的内容（innerHTML）
+    // 当该方法用于返回内容时，则返回第一个匹配元素的内容
+    // 当该方法用于设置内容时，则重写所有匹配元素的内容
+    // http://www.runoob.com/jquery/html-html.html
+    // 源码6203行左右
     html: function( value ) {
+      //调用$().html()方法，即调用access()方法
+      //access(this,function(),null,value,arguments.length)
       return access( this, function( value ) {
+        //
         var elem = this[ 0 ] || {},
           i = 0,
           l = this.length;
-
+        //$().html()的本质是 selector.innerHTML
         if ( value === undefined && elem.nodeType === 1 ) {
           return elem.innerHTML;
         }
 
         // See if we can take a shortcut and just use innerHTML
-        if ( typeof value === "string" && !rnoInnerhtml.test( value ) &&
+        //如果能直接使用innerHTML来解析的话
+        //注意：IE的innerHTML会忽略开头的无作用域元素
+        if ( typeof value === "string" && 
+          !rnoInnerhtml.test( value ) &&
           !wrapMap[ ( rtagName.exec( value ) || [ "", "" ] )[ 1 ].toLowerCase() ] ) {
-
+          //Hello <b>world</b>!
           value = jQuery.htmlPrefilter( value );
-
+          console.log(value,'value6235')
           try {
             for ( ; i < l; i++ ) {
               elem = this[ i ] || {};
 
               // Remove element nodes and prevent memory leaks
+              
               if ( elem.nodeType === 1 ) {
+                console.log(3333,'node6261')
+                // getAll( elem, false ):获取原本selector内部的内容（标签）
+                //先移除元素节点和注册的事件以防止内存泄漏
                 jQuery.cleanData( getAll( elem, false ) );
+
                 elem.innerHTML = value;
               }
             }
-
+            //将elem置为0，是防止执行下面的if(elem)...
             elem = 0;
 
             // If using innerHTML throws an exception, use the fallback method
