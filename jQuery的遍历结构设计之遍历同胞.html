@@ -35,14 +35,16 @@
 <script type="text/javascript">
   function dir(elem, dir, until) {
     let matched = []
-
-    let truncate = until !== undefined
+    //是否有另一目标节点
+    let hasUntil = until !== undefined
 
     let sibElem
     let isSibling=false
-    //遍历同胞元素有两种方法
+    //$().siblings()的实现有两种方法
     //第一种是先 prevAll 向前遍历目标元素的同胞元素，再 nextAll向后遍历目标元素的同胞元素
     //第二种是先找到父元素的第一个元素，再 nextAll向后遍历同胞元素，最后将 目标元素从数组中去掉
+
+    //这里采用的是第二种方式
     if(dir==='siblings'){
       sibElem=elem
       isSibling=true
@@ -55,7 +57,7 @@
     while ((elem = elem[dir])&&elem.nodeType !== 9) {
       if (elem.nodeType === 1) {
         //nextUntil:true
-        if (truncate) {
+        if (hasUntil) {
           console.log(elem.nodeName.toLowerCase(),elem.className,'className44')
           if (elem.nodeName.toLowerCase() === until || elem.className === until) {
             console.log(until,'until46')
@@ -66,7 +68,7 @@
         matched.push(elem)
       }
     }
-
+    //循环完后，去除目标元素
     if(isSibling){
       console.log(sibElem,matched.indexOf(sibElem),'sibElem66')
       matched.splice(matched.indexOf(sibElem),1)
