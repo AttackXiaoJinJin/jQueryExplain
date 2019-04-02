@@ -1639,6 +1639,7 @@
        * Utility function for retrieving the text value of an array of DOM nodes
        * @param {Array|Element} elem
        */
+      //源码1642行
       getText = Sizzle.getText = function( elem ) {
         var node,
           ret = "",
@@ -1657,7 +1658,7 @@
         else if ( nodeType === 1 || nodeType === 9 || nodeType === 11 ) {
           // Use textContent for elements
           // innerText usage removed for consistency of new lines (jQuery #11153)
-          //如果目标元素的子节点是文本节点，则直接返回
+          //如果目标元素的内容是文本，则直接返回textContent
           if ( typeof elem.textContent === "string" ) {
             /*jQuery没有用innerText获取文本的值，http://bugs.jquery.com/ticket/11153，
             大概就是在IE8中新节点插入会保留所有回车。
@@ -1665,7 +1666,7 @@
             textContent本身是dom3规范的，可以兼容火狐下的innerText问题。*/
             return elem.textContent;
           }
-          //如果子节点不是文本节点，则循环子节点，并依次获取它们的文本节点
+          //如果节点的内容不是文本，则循环子节点，并依次获取它们的文本节点
           else {
             // Traverse its children
             for ( elem = elem.firstChild; elem; elem = elem.nextSibling ) {
@@ -2830,6 +2831,7 @@
   // Deprecated
   jQuery.expr[ ":" ] = jQuery.expr.pseudos;
   jQuery.uniqueSort = jQuery.unique = Sizzle.uniqueSort;
+  //源码2833行
   jQuery.text = Sizzle.getText;
   jQuery.isXMLDoc = Sizzle.isXML;
   jQuery.contains = Sizzle.contains;
@@ -6149,20 +6151,29 @@
     remove: function( selector ) {
       return remove( this, selector );
     },
-
+    //源码6152行
     text: function( value ) {
       return access( this, function( value ) {
         return value === undefined ?
+          //读
+          //如果直接调用text()的话,就调用Sizzle.getText
           jQuery.text( this ) :
+          //写
           //循环
           this.empty().each( function() {
             //先清空目标元素的内容，然后再赋值
             if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
               console.log(value,'value6159')
               //如果包含标签的话，需要用html()方法，text()方法不会解析标签
+              /*jQuery没有用innerText获取文本的值，http://bugs.jquery.com/ticket/11153，
+              大概就是在IE8中新节点插入会保留所有回车。
+              所以jQuery采用了textContent获取文本值，
+              textContent本身是dom3规范的，可以兼容火狐下的innerText问题。*/
               this.textContent = value;
             }
-          } );
+          } )
+
+
       }, null, value, arguments.length );
     },
     /*append的内部的原理，就是通过创建一个文档碎片，把新增的节点放到文档碎片中，通过文档碎片克隆到到页面上去，目的是效率更高*/
@@ -6217,18 +6228,19 @@
         }
       } );
     },
-
+    //源码6231行
     empty: function() {
       var elem,
         i = 0;
 
       for ( ; ( elem = this[ i ] ) != null; i++ ) {
+        //如果是元素节点的话
         if ( elem.nodeType === 1 ) {
-
           // Prevent memory leaks
+          //清空内容和事件，防止内存泄漏
           jQuery.cleanData( getAll( elem, false ) );
-
           // Remove any remaining nodes
+          //清空节点所有内容
           elem.textContent = "";
         }
       }

@@ -7,98 +7,106 @@
 <body>
 <script src="jQuery.js"></script>
 <div class="divOne">
+  <!--<p id="divTwo">嘿嘿嘿</p>-->
   <p>嘿嘿嘿</p>
 </div>
 <div class="divOne">
-  <p>嘿嘿嘿</p>
+  <p>哈哈哈</p>
 </div>
 <input type="text" id="inputOne">
 <script>
-  function customHtml(value) {
-    //默认是选取第一个目标元素
-    let elem = this[0] || {},
+  function readText(elem) {
+    let node,
+      ret = "",
       i = 0,
-      l = this.length;
-    //如果是html()，即使读取目标元素的innerHTML的话
-    if (value === undefined && elem.nodeType === 1) {
-      return elem.innerHTML;
+      nodeType = elem.nodeType
+    console.log(nodeType,'nodeType22')
+    //如果selector是类的话，会有多个目标元素，此时需要分别单个循环
+    //比如document.querySelectorAll('.divOne').nodeType ->undefined
+    if (!nodeType) {
+      while ((node = elem[i++])) {
+        //单个获取
+        ret += readText(node)
+      }
     }
-    //根据目标元素的个数，依次对符合条件的目标元素赋值
-    for (; i < l; i++) {
-      elem = this[i] || {};
+    //元素节点，文档节点，文档碎片
+    else if (nodeType === 1 || nodeType === 9 || nodeType === 11) {
+      //如果目标元素的内容是文本，则直接返回
+      if (typeof elem.textContent === "string") {
+        /*jQuery没有用innerText获取文本的值，http://bugs.jquery.com/ticket/11153，
+        大概就是在IE8中新节点插入会保留所有回车。
+        所以jQuery采用了textContent获取文本值，
+        textContent本身是dom3规范的，可以兼容火狐下的innerText问题。*/
+        return elem.textContent
+      }
+      //如果节点的内容不是文本，则循环子节点，并依次获取它们的文本节点
+      else {
+        for (elem = elem.firstChild; elem; elem = elem.nextSibling) {
+          ret += readText(elem)
+        }
+      }
+    }
+    //文本节点、一个文档的CDATA部分（没遇到过这个）
+    else if (nodeType === 3 || nodeType === 4) {
+      //返回节点值
+      return elem.nodeValue;
+    }
+    //nodeType：注释节点 8，处理指令 7
+    //text()方法不处理这两个类型节点
+    return ret
+  }
+
+  function customEmpty() {
+    let elem,
+      i = 0;
+    //注意for循环的写法
+    for (; (elem = this[i]) != null; i++) {
+      //如果是元素节点的话，清空该节点的所有内容
       if (elem.nodeType === 1) {
-        elem.innerHTML = value;
+        elem.textContent = "";
       }
     }
+    return this;
+  }
+
+  function writeText(value) {
+    let elem,
+      i = 0;
+    //先清空目标元素的内容
+    customEmpty.call(this)
+    //循环
+    for (; (elem = this[i]) != null; i++) {
+      //元素节点，文档碎片，文档节点
+      if (elem.nodeType === 1 || elem.nodeType === 11 || elem.nodeType === 9) {
+        // text()方法不会解析标签
+        elem.textContent = value;
+      }
+    }
+    //return this 方便链式调用
+    return this
   }
 
 
-  // html()方法设置或返回被选元素的内容（innerHTML）
-  // 当该方法用于返回内容时，则返回第一个匹配元素的内容
-  // 当该方法用于设置内容时，则重写所有匹配元素的内容
-  // http://www.runoob.com/jquery/html-html.html
-  // 源码6203行左右
-  function html( value ) {
-    //调用$().html()方法，即调用access()方法
-    //关于access()方法的讲解，请看：https://www.cnblogs.com/gongshunkai/p/5905917.html
-    //access(this,function(),null,value,arguments.length)
-    return jQuery.access( this, function( value ) {
-      //读的话（.html()）只读第一个匹配的目标元素的内容所以是this[0]
-      //写的话（.html(xxx)）会循环每个匹配的目标并将其innerHTML置为value
-      var elem = this[ 0 ] || {},
-        i = 0,
-        l = this.length;
-      //当直接调用html()，并且目标元素是元素节点时，$().html()的本质是 selector.innerHTML
-      if ( value === undefined && elem.nodeType === 1 ) {
-        return elem.innerHTML;
-      }
-
-      // See if we can take a shortcut and just use innerHTML
-      //如果能直接使用innerHTML来解析的话
-      //注意：IE的innerHTML会忽略开头的无作用域元素
-      if ( typeof value === "string" &&
-        !rnoInnerhtml.test( value ) &&
-        !wrapMap[ ( rtagName.exec( value ) || [ "", "" ] )[ 1 ].toLowerCase() ] ) {
-        //Hello <b>world</b>!
-        value = jQuery.htmlPrefilter( value );
-        console.log(value,'value6235')
-        try {
-          for ( ; i < l; i++ ) {
-            elem = this[ i ] || {};
-
-            // Remove element nodes and prevent memory leaks
-
-            if ( elem.nodeType === 1 ) {
-              console.log(3333,'node6261')
-              // getAll( elem, false ):获取原本selector内部的内容（标签）
-              //先移除元素节点和注册的事件以防止内存泄漏
-              jQuery.cleanData( getAll( elem, false ) );
-
-              elem.innerHTML = value;
-            }
-          }
-          //将elem置为0，是防止执行下面的if(elem)...
-          elem = 0;
-
-          // If using innerHTML throws an exception, use the fallback method
-        } catch ( e ) {}
-      }
-
-      if ( elem ) {
-        this.empty().append( value );
-      }
-    }, null, value, arguments.length );
+  function customText(value) {
+    return value === undefined ?
+      //读
+      readText(this) :
+      //写
+      writeText.call(this, value)
   }
 
 
-  // console.log($(".divOne").html())
-  // $(".divOne").html("Hello <b>world</b>!")
-  let p=document.createElement('p')
-  p.innerText='哈哈哈'
-  $(".divOne").html(p)
-  // console.log(p,'p19')
+
+  customText.call(document.querySelectorAll('.divOne'))
+  customText.call(document.querySelectorAll('.divOne'),"Hello <b>world</b>!")
+  // let p=document.createElement('p')
+  // p.innerText='哈哈哈'
+  console.log($(".divOne").text())
+  // customText.call(document.querySelectorAll('.divOne'))
+  // console.log(document.querySelectorAll('.divOne').nodeType,'childnode81')
+  // console.log(document.querySelectorAll('.divOne')[0].textContent,'childnode81')
   // $("#divOne").text('<p>aaaa</p>')
-  // $("#divOne").text(p)
+  // console.log(document.querySelector("#divTwo"))
 
 </script>
 </body>

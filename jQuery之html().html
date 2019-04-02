@@ -91,11 +91,13 @@
   }
 
 
+  customHtml.call(document.querySelectorAll(".divOne"))
+  customHtml.call(document.querySelectorAll(".divOne"),"Hello <b>world</b>!")
   // console.log($(".divOne").html())
   // $(".divOne").html("Hello <b>world</b>!")
-  let p=document.createElement('p')
-  p.innerText='哈哈哈'
-  $(".divOne").html(p)
+  // let p=document.createElement('p')
+  // p.innerText='哈哈哈gggg'
+  // $(".divOne").html(p)
   // console.log(p,'p19')
   // $("#divOne").text('<p>aaaa</p>')
   // $("#divOne").text(p)
