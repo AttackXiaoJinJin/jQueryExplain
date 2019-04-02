@@ -4048,6 +4048,8 @@
 // The value/s can optionally be executed if it's a function
   
   //$().html():access(this,function(),null,value,arguments.length)
+  //源码4051行
+  //关于access()方法的讲解，请看：https://www.cnblogs.com/gongshunkai/p/5905917.html
   var access = function( elems, fn, key, value, chainable, emptyGet, raw ) {
     var i = 0,
       //1
@@ -6293,6 +6295,7 @@
         }
 
         if ( elem ) {
+          console.log(value,'value6297')
           this.empty().append( value );
         }
       }, null, value, arguments.length );
@@ -8274,7 +8277,8 @@
     val: function( value ) {
       var hooks, ret, valueIsFunction,
         elem = this[ 0 ];
-
+      console.log(elem,this,arguments.length,'length8277')
+      //false
       if ( !arguments.length ) {
         if ( elem ) {
           hooks = jQuery.valHooks[ elem.type ] ||
@@ -8302,35 +8306,41 @@
       }
 
       valueIsFunction = isFunction( value );
-
+      //i:0
       return this.each( function( i ) {
+        console.log(i,'i8308')
         var val;
 
         if ( this.nodeType !== 1 ) {
           return;
         }
-
+        //false
         if ( valueIsFunction ) {
           val = value.call( this, i, jQuery( this ).val() );
         } else {
           val = value;
         }
-
+        console.log(typeof val,val,'val8328')
         // Treat null/undefined as ""; convert numbers to string
+        //null置为""
         if ( val == null ) {
           val = "";
 
-        } else if ( typeof val === "number" ) {
+        }
+        //如果是number类型，就转化为字符串
+        else if ( typeof val === "number" ) {
           val += "";
 
         } else if ( Array.isArray( val ) ) {
           val = jQuery.map( val, function( value ) {
+            //如果是null，就返回空字符
+            //否则，将其转化为字符串
             return value == null ? "" : value + "";
           } );
         }
 
         hooks = jQuery.valHooks[ this.type ] || jQuery.valHooks[ this.nodeName.toLowerCase() ];
-
+        console.log(hooks,'hooks8340')
         // If set returns undefined, fall back to normal setting
         if ( !hooks || !( "set" in hooks ) || hooks.set( this, val, "value" ) === undefined ) {
           this.value = val;
