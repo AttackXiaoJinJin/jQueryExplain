@@ -5816,10 +5816,12 @@
     rcleanScript = /^\s*<!(?:\[CDATA\[|--)|(?:\]\]|--)>\s*$/g;
 
 // Prefer a tbody over its parent table for containing new rows
+  //额外判断，当选择器是table，并且插入的元素是tr时，会查找到table下的tbody，并返回tbody
+  //this, node
   function manipulationTarget( elem, content ) {
+    // 如果是table里面插入行tr
     if ( nodeName( elem, "table" ) &&
       nodeName( content.nodeType !== 11 ? content : content.firstChild, "tr" ) ) {
-
       return jQuery( elem ).children( "tbody" )[ 0 ] || elem;
     }
 
@@ -6207,7 +6209,6 @@
       return domManip( this, arguments, function( elem ) {
         if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
           var target = manipulationTarget( this, elem );
-
           target.insertBefore( elem, target.firstChild );
         }
       } );
@@ -6220,10 +6221,16 @@
         }
       } );
     },
-    //在被选元素之后插入指定的内容
+    //在被选元素之后插入指定的内容（不是内部）
+    //会移动已有节点到指定位置
+    //http://www.runoob.com/jquery/html-after.html
+    //源码6225行
     after: function() {
       return domManip( this, arguments, function( elem ) {
         if ( this.parentNode ) {
+          //a.insertBefore(elem, a.firstElementChild )
+          //在a的第一个child之前插入elem
+          //由父节点调用insertBefore，在目标节点的后一节点 的前面插入新节点
           this.parentNode.insertBefore( elem, this.nextSibling );
         }
       } );
@@ -6331,33 +6338,50 @@
       }, ignored );
     }
   } );
-
+  //源码6340行
   jQuery.each( {
+    // 在被选元素（内部）的结尾插入 HTML 元素
     appendTo: "append",
+    // 在被选元素（内部）的开头插入 HTML 元素
     prependTo: "prepend",
+    // 在被选元素（外部）前插入 HTML 元素
     insertBefore: "before",
+    // 在被选元素（外部）后插入 HTML 元素
     insertAfter: "after",
+    // 把被选元素（整个）替换为新的 HTML 元素
     replaceAll: "replaceWith"
-  }, function( name, original ) {
+  },
+    //key,value
+    function( name, original ) {
+    //insertAfter
     jQuery.fn[ name ] = function( selector ) {
+
       var elems,
         ret = [],
         insert = jQuery( selector ),
         last = insert.length - 1,
         i = 0;
-
+      //根据selector的个数来循环
       for ( ; i <= last; i++ ) {
+        //如果有多个选择器，就将待插入的节点深复制
         elems = i === last ? this : this.clone( true );
+        //$().after(elem)
         jQuery( insert[ i ] )[ original ]( elems );
 
         // Support: Android <=4.0 only, PhantomJS 1 only
         // .get() because push.apply(_, arraylike) throws on ancient WebKit
+        //push:array.push()
+        //ret.push(elems.get()) 作用就是将待插入的DOM节点依次放进ret数组中
+        //$().get():获取selector的DOM元素
         push.apply( ret, elems.get() );
       }
 
+      //$().pushStack将一个DOM集合压入jQuery栈，并返回DOM集合的jQuery对象，用于链式调用
       return this.pushStack( ret );
     };
   } );
+
+  
   var rnumnonpx = new RegExp( "^(" + pnum + ")(?!px)[a-z%]+$", "i" );
 
   var getStyles = function( elem ) {
