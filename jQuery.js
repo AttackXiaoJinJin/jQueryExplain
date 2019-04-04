@@ -6205,6 +6205,7 @@
       )
     },
     //在被选元素内部的开头插入指定内容
+    //源码6208行
     prepend: function() {
       return domManip( this, arguments, function( elem ) {
         if ( this.nodeType === 1 || this.nodeType === 11 || this.nodeType === 9 ) {
@@ -6214,6 +6215,7 @@
       } );
     },
     //在被选元素之前插入指定的内容
+    //源码6218行
     before: function() {
       return domManip( this, arguments, function( elem ) {
         if ( this.parentNode ) {

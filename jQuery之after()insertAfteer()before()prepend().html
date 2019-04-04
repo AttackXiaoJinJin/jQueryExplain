@@ -7,24 +7,28 @@
 <body>
 <script src="jQuery.js"></script>
 <div id="divTwo">
-  <p>这是divTwo</p>
+  <p >这是divTwo</p>
 </div>
 <div id="divOne">
   <p>这是divOne</p>
 </div>
 
 <script>
+  let divOne = document.querySelector("#divOne")
+  let divTwo = document.querySelector("#divTwo")
 //=========after()===========
-// let divOne = document.querySelector("#divOne")
-// let divTwo = document.querySelector("#divTwo")
-// //在divOne的第一个child之前插入divTwo
 // divOne.parentNode.insertBefore(divTwo, divOne.nextSibling)
-// //上面的等价于
+// 上面的等价于
 // $("#divOne").after($("#divTwo"))
 // $("#divTwo").insertAfter($("#divOne"))
 //=========prepend()===========
-$("#divOne").prepend($("#divTwo"))
+// $("#divTwo").prepend($("#divOne"))
 
+// divTwo.insertBefore( divOne, divTwo.firstChild )
+// =========before()===========
+  $("#divTwo").before($("#divOne"))
+// 上面的等价于
+  divTwo.parentNode.insertBefore( divOne, divTwo );
 
 
 
