@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery源码解析之replaceWith()/unwrap()</title>
+</head>
+<body>
+<script src="jQuery.js"></script>
+<div id="divTwo">
+  <p id="pTwo">这是divTwo</p>
+</div>
+<div id="divOne">
+  <p>这是divOne</p>
+</div>
+
+<script>
+  let divOne = document.querySelector("#divOne")
+  let divTwo = document.querySelector("#divTwo")
+  let pTwo = document.querySelector("#pTwo")
+  
+  // ===========replaceWith==============
+  //注意：removedNode指向已经被移除的divTwo
+  let removedNode=$("#divTwo").replaceWith("<span>永远</span>")
+  console.log(removedNode,'removedNode21')
+  //======相当于=====
+  let spanA=document.createElement("span")
+  spanA.innerText="永远"
+  divTwo.parentNode.replaceChild(spanA,divTwo)
+
+  // ==============unwrap================
+  $("#pTwo").unwrap()
+  //======相当于=====
+  let pTwoFather=pTwo.parentNode
+  if(pTwoFather.nodeName.toLowerCase()!=='body'){
+    pTwoFather.parentNode.replaceChild(pTwo,pTwoFather)
+  }
+
+</script>
+</body>
+</html>

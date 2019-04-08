@@ -450,8 +450,9 @@
 
       return ret;
     },
-
+    //源码453行，查看元素在数组中的位置
     inArray: function( elem, arr, i ) {
+      //indexOf:array.indexOf
       return arr == null ? -1 : indexOf.call( arr, elem, i );
     },
 
@@ -616,6 +617,8 @@
         slice = arr.slice,
         // Use a stripped-down indexOf as it's faster than native
         // https://jsperf.com/thor-indexof-vs-for/5
+        //源码619行
+        //jQuery的indexOf好像是自己用的
         indexOf = function( list, elem ) {
           var i = 0,
             len = list.length;
@@ -3239,6 +3242,9 @@
   }
 
   jQuery.each( {
+    //源码3245行
+    //11表示文档碎片
+    //返回被选元素的直接父元素
     parent: function( elem ) {
       var parent = elem.parentNode;
       return parent && parent.nodeType !== 11 ? parent : null;
@@ -6321,17 +6327,23 @@
         }
       }, null, value, arguments.length );
     },
-
+    // 源码6324行
+    // 把被选元素替换为新的内容
     replaceWith: function() {
       var ignored = [];
 
       // Make the changes, replacing each non-ignored context element with the new content
       return domManip( this, arguments, function( elem ) {
+        //获取选择器的父节点
         var parent = this.parentNode;
-
+        //$.inArray() 函数用于在数组中查找指定值，并返回它的索引值（如果没有找到，则返回-1）
+        //inArray() 可以看成是indexOf()
+        //如果ignored数组中没有目标元素的话
         if ( jQuery.inArray( this, ignored ) < 0 ) {
+          //清除目标元素的事件
           jQuery.cleanData( getAll( this ) );
           if ( parent ) {
+            //原生JS方法replaceChild(newnode,oldnode) 将某子节点替换成另一个
             parent.replaceChild( elem, this );
           }
         }
@@ -9787,9 +9799,13 @@
         jQuery( this ).wrapAll( htmlIsFunction ? html.call( this, i ) : html );
       } );
     },
-
+    //源码9798行
+    //移除被选元素的父元素（父节点是body则无效）
     unwrap: function( selector ) {
+      //选中目标元素的父节点（除了body）
       this.parent( selector ).not( "body" ).each( function() {
+        //this表示父节点
+        //即父节点被它的子节点替换
         jQuery( this ).replaceWith( this.childNodes );
       } );
       return this;
