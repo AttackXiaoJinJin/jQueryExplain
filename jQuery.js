@@ -471,18 +471,24 @@
 
       return first;
     },
-
+    //返回符合callback函数条件的数组
+    //elems 标签p的集合
+    //callback elems.nodeType===1
+    //invert 指定是否反转过滤结果默认是false
     grep: function( elems, callback, invert ) {
       var callbackInverse,
         matches = [],
         i = 0,
-        length = elems.length,
-        callbackExpect = !invert;
+        length = elems.length, //2
+        callbackExpect = !invert; //true
 
       // Go through the array, only saving the items
       // that pass the validator function
+      //只保存符合callback函数的条件的elem（elem.nodeType===1）
       for ( ; i < length; i++ ) {
+        //false
         callbackInverse = !callback( elems[ i ], i );
+        //false true
         if ( callbackInverse !== callbackExpect ) {
           matches.push( elems[ i ] );
         }
@@ -660,6 +666,8 @@
 
         // Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter
         rwhitespace = new RegExp( whitespace + "+", "g" ),
+        //源码669行
+        //去除字符串的左右空格
         rtrim = new RegExp( "^" + whitespace + "+|((?:^|[^\\\\])(?:\\\\.)*)" + whitespace + "+$", "g" ),
 
         rcomma = new RegExp( "^" + whitespace + "*," + whitespace + "*" ),
@@ -775,12 +783,13 @@
             }
         };
       }
-
+      //#pTwo undefiend undefined p集合
       function Sizzle( selector, context, results, seed ) {
         var m, i, elem, nid, match, groups, newSelector,
           newContext = context && context.ownerDocument,
 
           // nodeType defaults to 9, since context defaults to document
+          // 节点类型默认是9，因为context默认是document类型
           nodeType = context ? context.nodeType : 9;
 
         results = results || [];
@@ -904,8 +913,9 @@
             }
           }
         }
-
+        console.log(seed,'seed914')
         // All others
+        //去除左右空格后的字符串 #pTwo,undefined,undefined,p集合
         return select( selector.replace( rtrim, "$1" ), context, results, seed );
       }
 
@@ -1410,6 +1420,7 @@
         // Element contains another
         // Purposefully self-exclusive
         // As in, an element does not contain itself
+        //一个元素是否包含另一个元素（自己不包括自己）
         contains = hasCompare || rnative.test( docElem.contains ) ?
           function( a, b ) {
             var adown = a.nodeType === 9 ? a.documentElement : a,
@@ -1533,7 +1544,7 @@
 
         return document;
       };
-
+      //expr=#pTwo elements即元素节点集合p
       Sizzle.matches = function( expr, elements ) {
         return Sizzle( expr, null, null, elements );
       };
@@ -2837,6 +2848,8 @@
   //源码2833行
   jQuery.text = Sizzle.getText;
   jQuery.isXMLDoc = Sizzle.isXML;
+  //判断指定元素内是否包含另一个元素。即判断另一个DOM元素是否是指定DOM元素的后代
+  //源码2851行
   jQuery.contains = Sizzle.contains;
   jQuery.escapeSelector = Sizzle.escape;
 
@@ -2910,18 +2923,23 @@
     // Filtered directly for both simple and complex selectors
     return jQuery.filter( qualifier, elements, not );
   }
-
+  //返回符合一定条件的元素
+  //$("p").remove("#pTwo") expr=#pTwo elems=$("p")
+  //源码2925行
   jQuery.filter = function( expr, elems, not ) {
+    //jQuery对象转换成DOM对象
     var elem = elems[ 0 ];
 
     if ( not ) {
       expr = ":not(" + expr + ")";
     }
-
+    //目标元素节点只有一个的情况
     if ( elems.length === 1 && elem.nodeType === 1 ) {
       return jQuery.find.matchesSelector( elem, expr ) ? [ elem ] : [];
     }
-
+    //elems 标签p的集合
+    //jQuery.grep，返回符合callback函数条件的数组，
+    // 这里就是过滤掉非元素节点
     return jQuery.find.matches( expr, jQuery.grep( elems, function( elem ) {
       return elem.nodeType === 1;
     } ) );
@@ -6034,20 +6052,28 @@
     console.log(collection,'collection5929')
     return collection;
   }
-
+  //源码6037行
+  //$().remove()调用：selector, undefined, undefined
   function remove( elem, selector, keepData ) {
+    console.log(elem,selector,'elem6041')
     var node,
+      //remove()不带参数的话，nodes=目标元素
+      //$("p").remove("#pTwo") elem=$("p") selector=#pTwo
       nodes = selector ? jQuery.filter( selector, elem ) : elem,
       i = 0;
-
+    console.log(nodes,'nodes6061')
     for ( ; ( node = nodes[ i ] ) != null; i++ ) {
+      //如果keepData不为true，并且node为元素节点，则清除数据和事件
       if ( !keepData && node.nodeType === 1 ) {
         jQuery.cleanData( getAll( node ) );
       }
-
+      
+      //如果父节点存在，则removeChild
       if ( node.parentNode ) {
+        //$.contains:判断指定元素内是否包含另一个元素。即判断另一个DOM元素是否是指定DOM元素的后代
         if ( keepData && jQuery.contains( node.ownerDocument, node ) ) {
-          setGlobalEval( getAll( node, "script" ) );
+          //把所有的script标签标记为已经执行
+          setGlobalEval( getAll( node, "script" ) )
         }
         node.parentNode.removeChild( node );
       }
@@ -6156,6 +6182,7 @@
       return remove( this, selector, true );
     },
     //移除被选元素，包括所有的文本和子节点，不会保留移除元素的副本
+    //源码6159行
     remove: function( selector ) {
       return remove( this, selector );
     },

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery源码解析之detach()/empty()/remove()/unwrap()</title>
+</head>
+<body>
+<script src="jQuery.js"></script>
+
+<div id="divTwo">
+  <p id="pTwo">这是divTwo</p>
+</div>
+<div id="divOne">
+  <p>这是divOne</p>
+</div>
+
+<script>
+  let divOne = document.querySelector("#divOne")
+  // let divTwo = document.querySelectorAll(".divTwo")
+  let divTwo = document.querySelector("#divTwo")
+  let pTwo = document.querySelector("#pTwo")
+  //===========empty()==============
+  // $("#divTwo").empty()
+  // //相当于
+  // function customEmpty() {
+  //   let elem,
+  //     i = 0,array=[]
+  //   //DOM节点集合，querySelectorAll
+  //   //注意for循环的写法
+  //   for (; (elem = this[i]) != null; i++) {
+  //     //如果是元素节点的话，清空该节点的所有内容
+  //     if (elem.nodeType === 1) {
+  //       //jQuery.cleanData( getAll( elem, false ) );
+  //       elem.textContent = "";
+  //     }
+  //   }
+  //   //单个DOM节点，querySelector
+  //   if(this[i]===undefined){
+  //     if (this.nodeType === 1) {
+  //       //jQuery.cleanData( getAll( elem, false ) );
+  //       this.textContent = "";
+  //     }
+  //   }
+  //
+  //   return this;
+  // }
+  // customEmpty.call(divTwo)
+
+  //===========remove()==============
+  // //无参数======
+  // $("#divTwo").remove()
+  // //相当于
+  // // jQuery.cleanData(getAll(divTwo))
+  // divTwo.parentNode.removeChild(divTwo)
+  // //有参数======
+  // $("p").remove("#pTwo")
+  // //相当于
+  // // jQuery.cleanData(getAll(divTwo))
+  // pTwo.parentNode.removeChild( pTwo )
+
+  //===========detach()==============
+  //无参数======
+  // 该方法在 不久会将删除的元素插入DOM的情况下，很有用
+  let removeNodeOne=$("#divTwo").detach()
+  //有参数======
+  // let removeNodeTwo=$("p").detach("#pTwo")
+
+
+
+
+
+</script>
+</body>
+</html>
