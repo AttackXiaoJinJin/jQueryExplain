@@ -458,15 +458,17 @@
 
     // Support: Android <=4.0 only, PhantomJS 1 only
     // push.apply(_, arraylike) throws on ancient WebKit
+    //源码461行
+    //将second合并到first后面
     merge: function( first, second ) {
       var len = +second.length,
         j = 0,
         i = first.length;
-
+      //依次将second的item添加到first后面
       for ( ; j < len; j++ ) {
         first[ i++ ] = second[ j ];
       }
-
+      //first可能是类数组，所以需要更新下length属性
       first.length = i;
 
       return first;
@@ -1421,6 +1423,7 @@
         // Purposefully self-exclusive
         // As in, an element does not contain itself
         //一个元素是否包含另一个元素（自己不包括自己）
+        //未看，需要和
         contains = hasCompare || rnative.test( docElem.contains ) ?
           function( a, b ) {
             var adown = a.nodeType === 9 ? a.documentElement : a,
@@ -1578,9 +1581,11 @@
 
         return Sizzle( expr, document, null, [ elem ] ).length > 0;
       };
-
+      //源码1583行
+      //jQuery.contains实际上调用的是Sizzle.contains
       Sizzle.contains = function( context, elem ) {
         // Set document vars if needed
+        //如果context的所属文档不是document
         if ( ( context.ownerDocument || context ) !== document ) {
           setDocument( context );
         }
@@ -2848,8 +2853,10 @@
   //源码2833行
   jQuery.text = Sizzle.getText;
   jQuery.isXMLDoc = Sizzle.isXML;
+  //未看
   //判断指定元素内是否包含另一个元素。即判断另一个DOM元素是否是指定DOM元素的后代
   //源码2851行
+  //jQuery.contains( node.ownerDocument, node )
   jQuery.contains = Sizzle.contains;
   jQuery.escapeSelector = Sizzle.escape;
 
@@ -2885,9 +2892,10 @@
   var rneedsContext = jQuery.expr.match.needsContext;
 
 
-
+  //源码2843行-2847行
+  //判断两个参数的nodename是否相等
   function nodeName( elem, name ) {
-
+    console.log(elem,name,'name2893')
     return elem.nodeName && elem.nodeName.toLowerCase() === name.toLowerCase();
 
   };
@@ -4172,6 +4180,10 @@
   function camelCase( string ) {
     return string.replace( rmsPrefix, "ms-" ).replace( rdashAlpha, fcamelCase );
   }
+  //判断是否是指定的节点类型
+  //只接受元素节点1，文档节点9，任意对象
+  //返回true/false
+  //源码4178行
   var acceptData = function( owner ) {
 
     // Accepts only:
@@ -4862,6 +4874,7 @@
 
 // We have to close these tags to support XHTML (#13200)
   //兼容性，用以支持XHTML
+  //源码4868行
   var wrapMap = {
 
     // Support: IE <=9 only
@@ -4884,23 +4897,32 @@
   wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
   wrapMap.th = wrapMap.td;
 
-
+  //一般是传的node,'script'
+  //应该是用来获取context上的tag标签，或者是将context和context里的tag标签的元素合并
+  //源码4893行
   function getAll( context, tag ) {
 
     // Support: IE <=9 - 11 only
     // Use typeof to avoid zero-argument method invocation on host objects (#15151)
     var ret;
 
+    console.log(context,typeof context.getElementsByTagName,typeof context.querySelectorAll,'context4894')
+    //如果context存在getElementsByTagName的方法的话
     if ( typeof context.getElementsByTagName !== "undefined" ) {
-      ret = context.getElementsByTagName( tag || "*" );
+      //tag:script
+      //从context中获取script标签的节点
+      ret = context.getElementsByTagName( tag || "*" )
+      console.log(tag,ret,'ret4897')
 
-    } else if ( typeof context.querySelectorAll !== "undefined" ) {
+    }
+  //DocumentFragment没有getElementsByTagName方法，但有querySelectorAll方法
+  else if ( typeof context.querySelectorAll !== "undefined" ) {
       ret = context.querySelectorAll( tag || "*" );
 
     } else {
       ret = [];
     }
-
+    //nodeName() 判断两个参数的nodename是否相等
     if ( tag === undefined || tag && nodeName( context, tag ) ) {
 
       return jQuery.merge( [ context ], ret );
@@ -5525,6 +5547,8 @@
         new jQuery.Event( originalEvent );
     },
     // load/focus/blur/click/beforeunload/focusin/focusout/mouseenter/mouseleave/pointerenter/pointerleave
+    //未看
+    //cleanData()里有用到
     special: {
       load: {
 
@@ -5579,7 +5603,9 @@
       }
     }
   };
-
+  //移除elem上的自定义监听事件
+  //源码5599行
+  //jQuery.removeEvent(elem,type,data.handle)
   jQuery.removeEvent = function( elem, type, handle ) {
 
     // This "if" is needed for plain objects
@@ -6061,10 +6087,11 @@
       //$("p").remove("#pTwo") elem=$("p") selector=#pTwo
       nodes = selector ? jQuery.filter( selector, elem ) : elem,
       i = 0;
-    console.log(nodes,'nodes6061')
+    console.log(nodes,nodes[i],'nodes6061')
     for ( ; ( node = nodes[ i ] ) != null; i++ ) {
       //如果keepData不为true，并且node为元素节点，则清除数据和事件
       if ( !keepData && node.nodeType === 1 ) {
+
         jQuery.cleanData( getAll( node ) );
       }
       
@@ -6129,31 +6156,34 @@
       // Return the cloned set
       return clone;
     },
-
+    //清除elems上的数据和事件
+    //源码6146行
     cleanData: function( elems ) {
       var data, elem, type,
-        //load、focus、blur、click、beforeunload
+        //beforeunload/blur/click/focus/focusin/focusout/
+        //load/mouseenter/mouseleave/pointerenter/pointerleave
         special = jQuery.event.special,
         i = 0;
-      console.log(special,'special6088')
-      for ( ; ( elem = elems[ i ] ) !== undefined; i++ ) {
 
+      for ( ; ( elem = elems[ i ] ) !== undefined; i++ ) {
+        //允许的节点类型
         if ( acceptData( elem ) ) {
-          //undefined
+          //当有事件绑定到elem后，jQuery会给elem一个属性dataPriv.expando
+          //该属性上面就绑定了事件和数据
           if ( ( data = elem[ dataPriv.expando ] ) ) {
-            console.log(data,'data6092')
+            //如果data上有事件的话
             if ( data.events ) {
+              //逐个列举data上的事件，比如click
               for ( type in data.events ) {
-                //如果selector绑定了load、focus、blur、click、beforeunload的事件的话
+                // 如果special中有data.events上的事件
                 if ( special[ type ] ) {
-                  console.log(special[type],'special6096')
+                  //调用jQuery.event.remove方法，移除elem上的event类型
                   jQuery.event.remove( elem, type );
 
                   // This is a shortcut to avoid jQuery.event.remove's overhead
                 }
-                //比如mouseover、mouseout等
+                //应该是自定义的事件
                 else {
-                  console.log(2222,'special6103')
                   //本质即elem.removeEventListener(type,handle)
                   jQuery.removeEvent( elem, type, data.handle );
                 }
@@ -6162,10 +6192,12 @@
 
             // Support: Chrome <=35 - 45+
             // Assign undefined instead of using delete, see Data#remove
+            //最后将元素的dataPriv.expando属性置为undefined
             elem[ dataPriv.expando ] = undefined;
           }
+          //dataUser应该是用户绑定的事件
           if ( elem[ dataUser.expando ] ) {
-
+            // 将元素的dataUser.expando属性置为undefined
             // Support: Chrome <=35 - 45+
             // Assign undefined instead of using delete, see Data#remove
             elem[ dataUser.expando ] = undefined;

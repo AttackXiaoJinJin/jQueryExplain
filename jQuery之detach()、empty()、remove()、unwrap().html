@@ -53,7 +53,10 @@
   // // jQuery.cleanData(getAll(divTwo))
   // divTwo.parentNode.removeChild(divTwo)
   // //有参数======
-  // $("p").remove("#pTwo")
+  $("#pTwo").click(function () {
+    console.log("pTwo被点击了")
+  })
+  $("p").remove("#pTwo")
   // //相当于
   // // jQuery.cleanData(getAll(divTwo))
   // pTwo.parentNode.removeChild( pTwo )
@@ -61,7 +64,7 @@
   //===========detach()==============
   //无参数======
   // 该方法在 不久会将删除的元素插入DOM的情况下，很有用
-  let removeNodeOne=$("#divTwo").detach()
+  // let removeNodeOne=$("#divTwo").detach()
   //有参数======
   // let removeNodeTwo=$("p").detach("#pTwo")
 
