@@ -8,24 +8,26 @@
 <script src="jQuery.js"></script>
 
 <div id="divTwo">
-  <p id="pTwo">这是divTwo</p>
+  <p id="pTwo">这是divTwo
+    <span id="spanTwo">这是spanTwo</span>
+  </p>
 </div>
 <div id="divOne">
-  <p>这是d
+
 </div>
 
 <script>
-  let divOne = document.querySelector("#divOne")
-  // let divTwo = document.querySelectorAll(".divTwo")
-  let divTwo = document.querySelector("#divTwo")
-  let pTwo = document.querySelector("#pTwo")
-
   $("#pTwo").click(function () {
     alert("pTwo被点击了")
   })
-  $("#pTwo").clone(true).appendTo($("#divOne"))
-
-
+  $("#spanTwo").click(function (e) {
+    //阻止冒泡
+    e.stopPropagation()
+    alert("spanTwo被点击了")
+  })
+  // $("#pTwo").clone().appendTo($("#divOne"))
+  // $("#pTwo").clone(true,false).appendTo($("#divOne"))
+  $("#pTwo").clone(true,true).appendTo($("#divOne"))
 </script>
 </body>
 </html>

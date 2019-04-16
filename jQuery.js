@@ -4930,8 +4930,9 @@
     return ret;
   }
 
-
-// Mark scripts as having already been evaluated
+  //设置目标元素内部的`<script>`标签为已执行
+  //源码4934行
+  // Mark scripts as having already been evaluated
   function setGlobalEval( elems, refElements ) {
     var i = 0,
       l = elems.length;
@@ -5897,24 +5898,34 @@
 
     return elem;
   }
-
+  //src:目标元素
+  //dest:克隆的元素
+  //源码5902行
   function cloneCopyEvent( src, dest ) {
     var i, l, type, pdataOld, pdataCur, udataOld, udataCur, events;
 
     if ( dest.nodeType !== 1 ) {
       return;
     }
-
+    //拷贝jQuery内部数据：事件、处理程序等
     // 1. Copy private data: events, handlers, etc.
     if ( dataPriv.hasData( src ) ) {
+      //private data old，即目标元素的数据
+      //注意：jQuery是通过uuid将目标元素进行标记，
+      //然后将与目标元素相关的数据都放到内存中
+      //通过uuid和内存的数据建立映射
+      //这种数据分离的做法有利于复制数据，但不能复制事件
       pdataOld = dataPriv.access( src );
+      //private data current，即为克隆的元素设置数据
       pdataCur = dataPriv.set( dest, pdataOld );
       events = pdataOld.events;
-
+      //如果事件存在
       if ( events ) {
+        //移除克隆对的元素的处理程序和事件
         delete pdataCur.handle;
         pdataCur.events = {};
-
+        //依次为克隆的元素添加事件
+        //注意：事件是不能被复制的，所以需要重新绑定
         for ( type in events ) {
           for ( i = 0, l = events[ type ].length; i < l; i++ ) {
             jQuery.event.add( dest, type, events[ type ][ i ] );
@@ -5924,24 +5935,29 @@
     }
 
     // 2. Copy user data
+    //拷贝用户数据
     if ( dataUser.hasData( src ) ) {
       udataOld = dataUser.access( src );
       udataCur = jQuery.extend( {}, udataOld );
-
+      //为克隆的元素设置数据
       dataUser.set( dest, udataCur );
     }
   }
 
-// Fix IE bugs, see support tests
+  //解决IE的bug：(1)无法保存克隆的单选、多选的状态 (2)无法将克隆的选项返回至默认选项状态
+  // Fix IE bugs, see support tests
+  //源码5937行
   function fixInput( src, dest ) {
     var nodeName = dest.nodeName.toLowerCase();
 
     // Fails to persist the checked state of a cloned checkbox or radio button.
+    //IE无法保存克隆的单选框和多选框的选择状态
     if ( nodeName === "input" && rcheckableType.test( src.type ) ) {
       dest.checked = src.checked;
-
-      // Fails to return the selected option to the default selected state when cloning options
-    } else if ( nodeName === "input" || nodeName === "textarea" ) {
+    }
+    //IE无法将克隆的选项返回至默认选项状态
+    // Fails to return the selected option to the default selected state when cloning options
+    else if ( nodeName === "input" || nodeName === "textarea" ) {
       dest.defaultValue = src.defaultValue;
     }
   }
@@ -6114,13 +6130,18 @@
     htmlPrefilter: function( html ) {
       return html.replace( rxhtmlTag, "<$1></$2>" );
     },
-
+    //源码6117行
+    //生成被选元素的副本，包含子节点、文本和属性
     clone: function( elem, dataAndEvents, deepDataAndEvents ) {
       var i, l, srcElements, destElements,
+        //拷贝目标节点的属性和值
+        //如果为true，则包括拷贝子节点的所有属性和值
         clone = elem.cloneNode( true ),
+        //判断elem是否脱离文档流
         inPage = jQuery.contains( elem.ownerDocument, elem );
 
       // Fix IE cloning issues
+      //兼容性处理,解决IE bug
       if ( !support.noCloneChecked && ( elem.nodeType === 1 || elem.nodeType === 11 ) &&
         !jQuery.isXMLDoc( elem ) ) {
 
@@ -6134,19 +6155,26 @@
       }
 
       // Copy the events from the original to the clone
+      //从目标节点克隆数据、添加事件给克隆的元素
       if ( dataAndEvents ) {
+        //克隆子节点的事件和数据
         if ( deepDataAndEvents ) {
+          //源节点
           srcElements = srcElements || getAll( elem );
+          //克隆节点
           destElements = destElements || getAll( clone );
 
           for ( i = 0, l = srcElements.length; i < l; i++ ) {
             cloneCopyEvent( srcElements[ i ], destElements[ i ] );
           }
-        } else {
+        }
+        //只克隆目标节点和数据
+        else {
           cloneCopyEvent( elem, clone );
         }
       }
 
+      //将script标签设为已运行
       // Preserve script evaluation history
       destElements = getAll( clone, "script" );
       if ( destElements.length > 0 ) {
@@ -6156,6 +6184,7 @@
       // Return the cloned set
       return clone;
     },
+
     //清除elems上的数据和事件
     //源码6146行
     cleanData: function( elems ) {
@@ -6321,11 +6350,16 @@
 
       return this;
     },
-
+    //克隆目标节点及其子节点
+    //dataAndEvents是否克隆目标节点的事件和数据，默认是false
+    //deepDataAndEvents是否克隆目标节点子节点的事件和数据，默认值是dataAndEvents
+    //源码6327行
     clone: function( dataAndEvents, deepDataAndEvents ) {
+      //默认是false
       dataAndEvents = dataAndEvents == null ? false : dataAndEvents;
+      //默认是dataAndEvents
       deepDataAndEvents = deepDataAndEvents == null ? dataAndEvents : deepDataAndEvents;
-
+      //循环调用jQuery.clone
       return this.map( function() {
         return jQuery.clone( this, dataAndEvents, deepDataAndEvents );
       } );
