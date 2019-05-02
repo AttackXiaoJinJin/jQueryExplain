@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery源码解析之offset()和position()</title>
+</head>
+<body>
+<script src="jQuery.js"></script>
+<p id="pTwo">这是divTwo</p>
+<script>
+  // $("#pTwo").offset() //{top: 16, left: 8}
+  //
+  // let p = document.getElementById("pTwo");
+  // let rect=p.getBoundingClientRect()
+  // //返回所属文档的默认窗口对象（只读）
+  // //原点坐标
+  // let win = p.ownerDocument.defaultView;
+  // let offsetObj={
+  //   top: rect.top + win.pageYOffset,
+  //   left: rect.left + win.pageXOffset
+  // }
+  // console.log(offsetObj,'win18')
+  
+  // $("#pTwo").offset({top:15,left:15})
+
+  $("#pTwo").offset(function(index,currentoffset){
+    let newPos={};
+    newPos.left=currentoffset.left+15;
+    newPos.top=currentoffset.top+15;
+    return newPos;
+  });
+
+  // $("#pTwo").offset({top:31,left:23})
+
+</script>
+</body>
+</html>

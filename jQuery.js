@@ -4157,6 +4157,7 @@
 
 // Matches dashed string for camelizing
   //匹配 -ms- 前缀
+  //源码4160行
   var rmsPrefix = /^-ms-/,
     //[a-z] 表示任意字母
     rdashAlpha = /-([a-z])/g;
@@ -4170,6 +4171,8 @@
   // 	})
   // }
 
+  //将第二个参数转换成大写
+  //源码4174行
   function fcamelCase( all, letter ) {
     return letter.toUpperCase();
   }
@@ -4177,7 +4180,11 @@
 // Convert dashed to camelCase; used by the css and data modules
 // Support: IE <=9 - 11, Edge 12 - 15
 // Microsoft forgot to hump their vendor prefix (#9572)
+  //先将带有-ms-前缀的字符串转换成ms-
+  //再使用驼峰命名法将margin-Top转化成margin-top
+  //源码4183
   function camelCase( string ) {
+    //replace(a,b) 将a替换成b
     return string.replace( rmsPrefix, "ms-" ).replace( rdashAlpha, fcamelCase );
   }
   //判断是否是指定的节点类型
@@ -6599,7 +6606,8 @@
     } );
   } )();
 
-
+  //elem, "position"
+  //源码6609行
   function curCSS( elem, name, computed ) {
     var width, minWidth, maxWidth, ret,
 
@@ -6608,15 +6616,19 @@
       // fixes an issue with getting wrong values
       // on detached elements
       style = elem.style;
-
+    //获取elem所有的样式属性
     computed = computed || getStyles( elem );
-
+    console.log(computed,'computed6621')
     // getPropertyValue is needed for:
     //   .css('filter') (IE 9 only, #12537)
     //   .css('--customProperty) (#3144)
     if ( computed ) {
+      //返回元素的属性的默认值
+      //position:static
+      //top:0px
+      //left:0px
       ret = computed.getPropertyValue( name ) || computed[ name ];
-
+      console.log(ret,'ret6627')
       if ( ret === "" && !jQuery.contains( elem.ownerDocument, elem ) ) {
         ret = jQuery.style( elem, name );
       }
@@ -6626,6 +6638,9 @@
       // but width seems to be reliably pixels.
       // This is against the CSSOM draft spec:
       // https://drafts.csswg.org/cssom/#resolved-values
+      //当属性设置成数值时，安卓浏览器会返回一些百分比，但是宽度是像素显示的
+      //这违反了CSSOM草案规范
+      //所以以下方法是修复不规范的width属性的
       if ( !support.pixelBoxStyles() && rnumnonpx.test( ret ) && rboxStyle.test( name ) ) {
 
         // Remember the original values
@@ -6711,6 +6726,8 @@
 
 // Return a property mapped along what jQuery.cssProps suggests or to
 // a vendor prefixed property.
+  //返回 jQuery.cssProps中找到的属性或者是不同浏览器的前缀属性
+  //源码6722
   function finalPropName( name ) {
     var ret = jQuery.cssProps[ name ];
     if ( !ret ) {
@@ -6962,20 +6979,26 @@
         return style[ name ];
       }
     },
-
+    //elem, "position"
     css: function( elem, name, extra, styles ) {
       var val, num, hooks,
+        //name字符串格式处理
         origName = camelCase( name ),
+        //判断是否是自定义属性
         isCustomProp = rcustomProp.test( name );
-
+      console.log(origName,isCustomProp,name,'isCustomProp6970')
+      //确保我们是在处理正确的name，如果属性是一个自定义的CSS属性，我们
+      //是不会去修改它的，因为是用户自定义的
       // Make sure that we're working with the right name. We don't
       // want to modify the value if it is a CSS custom property
       // since they are user-defined.
+      //如果不是自定义的属性的话，再次对name进行格式处理
       if ( !isCustomProp ) {
         name = finalPropName( origName );
       }
 
       // Try prefixed name followed by the unprefixed name
+      //兼容性处理，加上浏览器前缀
       hooks = jQuery.cssHooks[ name ] || jQuery.cssHooks[ origName ];
 
       // If a hook was provided get the computed value from there
@@ -6984,9 +7007,13 @@
       }
 
       // Otherwise, if a way to get the computed value exists, use that
+
       if ( val === undefined ) {
+        //elem, "position"
+        //返回属性的默认值
         val = curCSS( elem, name, styles );
       }
+      console.log(hooks,val,'hooks6995')
 
       // Convert "normal" to computed value
       if ( val === "normal" && name in cssNormalTransform ) {
@@ -10399,26 +10426,34 @@
   };
 
 
-
-
+  //offset()的关键方法
+  //源码10403行
   jQuery.offset = {
     setOffset: function( elem, options, i ) {
       var curPosition, curLeft, curCSSTop, curTop, curOffset, curCSSLeft, calculatePosition,
+        //获取元素的position属性的值
+        //static
         position = jQuery.css( elem, "position" ),
+        //过滤成标准jQuery对象
         curElem = jQuery( elem ),
         props = {};
 
       // Set position first, in-case top/left are set even on static elem
+      //指定相对定位relative
       if ( position === "static" ) {
         elem.style.position = "relative";
       }
-
+      //{left:8,top:16}
       curOffset = curElem.offset();
+      //0px
       curCSSTop = jQuery.css( elem, "top" );
+      //0px
       curCSSLeft = jQuery.css( elem, "left" );
+      // 如果定位position是（绝对定位absolute或固定定位fixed），
+      // 并且top,left属性包含auto的话
+      //false
       calculatePosition = ( position === "absolute" || position === "fixed" ) &&
         ( curCSSTop + curCSSLeft ).indexOf( "auto" ) > -1;
-
       // Need to be able to calculate position if either
       // top or left is auto and position is either absolute or fixed
       if ( calculatePosition ) {
@@ -10427,27 +10462,36 @@
         curLeft = curPosition.left;
 
       } else {
+        //0 0
         curTop = parseFloat( curCSSTop ) || 0;
         curLeft = parseFloat( curCSSLeft ) || 0;
       }
-
+      //如果传的参数是function{}的话
       if ( isFunction( options ) ) {
 
         // Use jQuery.extend here to allow modification of coordinates argument (gh-1848)
         options = options.call( elem, i, jQuery.extend( {}, curOffset ) );
       }
-
+      //如果传的参数的有top值
       if ( options.top != null ) {
+        //参数 top - offset().top + element.top
         props.top = ( options.top - curOffset.top ) + curTop;
       }
+      //如果传的参数的有left值
       if ( options.left != null ) {
+        //参数 left - offset().left + element.left
         props.left = ( options.left - curOffset.left ) + curLeft;
       }
-
+      //自己没见过使用 using 的情况。。
       if ( "using" in options ) {
         options.using.call( elem, props );
 
-      } else {
+      }
+      //所以一般走这里，为当前元素设置top，left属性
+      else {
+        //position:relative
+        //top:xxx
+        //left:xxx
         curElem.css( props );
       }
     }
@@ -10455,38 +10499,68 @@
 
   jQuery.fn.extend( {
 
+    //返回目标元素相对于doucument的偏移坐标，
+    //即距离浏览器左上角的距离
+
+    // 返回偏移坐标：$(selector).offset()
+    // 设置偏移坐标：$(selector).offset({top:value,left:value})
+    // 使用函数设置偏移坐标：$(selector).offset(function(index,currentoffset))
     // offset() relates an element's border box to the document origin
+    //源码10500行
+    //options即参数
+    //arguments是参数对象
     offset: function( options ) {
 
       // Preserve chaining for setter
+      //如果是有参数的，参数是undefined则返回目标元素本身，
+      //否则为每个目标元素设置options
+      console.log(options,arguments,'arguments10476')
+      //$().offset()不走这里
       if ( arguments.length ) {
+        console.log('aaa','vvv10507')
         return options === undefined ?
           this :
           this.each( function( i ) {
+            //为每个目标元素设置options
             jQuery.offset.setOffset( this, options, i );
           } );
       }
 
       var rect, win,
+        //获取DOM节点
         elem = this[ 0 ];
 
       if ( !elem ) {
         return;
       }
 
+
+      // jQuery不支持获取隐藏元素的偏移坐标。
+      // 同理，也无法取得隐藏元素的 border, margin, 或 padding 信息
+      //所以如果元素是隐藏的，默认返回0值
       // Return zeros for disconnected and hidden (display: none) elements (gh-2310)
       // Support: IE <=11 only
       // Running getBoundingClientRect on a
       // disconnected node in IE throws an error
+      //对IE的特殊处理
       if ( !elem.getClientRects().length ) {
         return { top: 0, left: 0 };
       }
 
       // Get document-relative position by adding viewport scroll to viewport-relative gBCR
+      //返回元素的大小及其相对于视口的位置
+      //https://developer.mozilla.org/zh-CN/docs/Web/API/Element/getBoundingClientRect
       rect = elem.getBoundingClientRect();
+      //返回所属文档的默认窗口对象（只读）
+      //原点坐标
       win = elem.ownerDocument.defaultView;
+      //pageXOffset,pageYOffset 相当于 scrollX 和 scrollY
+      //返回文档在窗口左上角水平 x 和垂直 y 方向滚动的像素
       return {
+        //16    0
+        //
         top: rect.top + win.pageYOffset,
+        //8     0
         left: rect.left + win.pageXOffset
       };
     },
