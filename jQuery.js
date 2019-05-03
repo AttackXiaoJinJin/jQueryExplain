@@ -6618,7 +6618,7 @@
       style = elem.style;
     //获取elem所有的样式属性
     computed = computed || getStyles( elem );
-    console.log(computed,'computed6621')
+    // console.log(computed,'computed6621')
     // getPropertyValue is needed for:
     //   .css('filter') (IE 9 only, #12537)
     //   .css('--customProperty) (#3144)
@@ -10426,8 +10426,8 @@
   };
 
 
-  //offset()的关键方法
-  //源码10403行
+  // offset()的关键方法
+  // 源码10403行
   jQuery.offset = {
     setOffset: function( elem, options, i ) {
       var curPosition, curLeft, curCSSTop, curTop, curOffset, curCSSLeft, calculatePosition,
@@ -10499,16 +10499,16 @@
 
   jQuery.fn.extend( {
 
-    //返回目标元素相对于doucument的偏移坐标，
-    //即距离浏览器左上角的距离
+    // 返回目标元素相对于doucument的偏移坐标，
+    // 即距离浏览器左上角的距离
 
     // 返回偏移坐标：$(selector).offset()
     // 设置偏移坐标：$(selector).offset({top:value,left:value})
     // 使用函数设置偏移坐标：$(selector).offset(function(index,currentoffset))
     // offset() relates an element's border box to the document origin
-    //源码10500行
-    //options即参数
-    //arguments是参数对象
+    // 源码10500行
+    // options即参数
+    // arguments是参数对象
     offset: function( options ) {
 
       // Preserve chaining for setter
@@ -10565,9 +10565,14 @@
       };
     },
 
+    // 返回被选元素相对于父元素（parent）的偏移坐标
+    // 可以理解成被选元素设置为absolute，
+    // 然后设置left、top的值就是相对于父元素的偏移坐标
+    // 源码10571行
     // position() relates an element's margin box to its offset parent's padding box
     // This corresponds to the behavior of CSS absolute positioning
     position: function() {
+      // 如果DOM元素不存在，直接返回
       if ( !this[ 0 ] ) {
         return;
       }
@@ -10577,34 +10582,48 @@
         parentOffset = { top: 0, left: 0 };
 
       // position:fixed elements are offset from the viewport, which itself always has zero offset
+      // position:fixed的元素，是相对于浏览器窗口进行定位的，
+      // 所以它的偏移就是getBoundingClientRect()，即获取某个元素相对于视窗的位置
       if ( jQuery.css( elem, "position" ) === "fixed" ) {
 
         // Assume position:fixed implies availability of getBoundingClientRect
         offset = elem.getBoundingClientRect();
 
-      } else {
+      }
+      // 除去position是fixed的情况
+      else {
+        // 获取被选元素相对于文档（document）的偏移坐标
         offset = this.offset();
 
         // Account for the *real* offset parent, which can be the document or its root element
         // when a statically positioned element is identified
         doc = elem.ownerDocument;
+        //定位目标元素的父元素（position不为static的元素）
         offsetParent = elem.offsetParent || doc.documentElement;
+        // 如果父元素是<body>/<html>的话，将父元素重新定位为它们的父元素
+        // body的父元素是html，html的父元素是document
         while ( offsetParent &&
         ( offsetParent === doc.body || offsetParent === doc.documentElement ) &&
         jQuery.css( offsetParent, "position" ) === "static" ) {
 
           offsetParent = offsetParent.parentNode;
         }
+        // 如果定位父元素存在，并且不等于目标元素，并且定位元素类型是 "元素类型"
         if ( offsetParent && offsetParent !== elem && offsetParent.nodeType === 1 ) {
 
           // Incorporate borders into its offset, since they are outside its content origin
           parentOffset = jQuery( offsetParent ).offset();
+          // 这两行代码的意思是parentOffset的offset()是要不包括边框的宽度的，
+          // 所以需要去掉
+          // jQuery.css( element, "borderTopWidth", true )的 true 表示返回数字，而不带单位 px
           parentOffset.top += jQuery.css( offsetParent, "borderTopWidth", true );
           parentOffset.left += jQuery.css( offsetParent, "borderLeftWidth", true );
         }
       }
 
       // Subtract parent offsets and element margins
+      // 可以看出，$().position()的本质是目标元素的offset()减去父元素的offset()，同时还要算上目标元素的margin，因为盒子模型（关键）。
+      //（注意：offset()的本质是getBoundingClientRect()的top、left + pageYOffset、pageXOffset）
       return {
         top: offset.top - parentOffset.top - jQuery.css( elem, "marginTop", true ),
         left: offset.left - parentOffset.left - jQuery.css( elem, "marginLeft", true )
@@ -10621,6 +10640,7 @@
     // and might be considered as more preferable results.
     //
     // This logic, however, is not guaranteed and can change at any point in the future
+
     offsetParent: function() {
       return this.map( function() {
         var offsetParent = this.offsetParent;
