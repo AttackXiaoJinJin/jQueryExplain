@@ -2,17 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>jQuery源码解析之offset()和position()</title>
+  <title>jQuery源码解析之position()</title>
 </head>
 <body>
 <script src="jQuery.js"></script>
 <p id="pTwo">这是divTwo</p>
 <script>
-  $("#pTwo").position()
-
-  console.log(jQuery.css(document.querySelector("#pTwo"), "width", true),'width13');
-  // console.log(document.querySelector("body").parentNode.nodeName,'name13')
-  // console.log(document.querySelector("html").parentNode.nodeName,'name14')
+  $("#pTwo").css('display','none')
+  // $("#pTwo").position()
+  let p=document.querySelector("#pTwo")
+  p.style.borderLeftWidth='8px'
+  console.log(p.getBoundingClientRect(),'pTwo11'); //x:8,y:16
+  console.log($("#pTwo").width(),'width15')
 
 
 </script>

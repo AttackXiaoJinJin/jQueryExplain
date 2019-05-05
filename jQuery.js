@@ -6689,19 +6689,26 @@
 
 
   var
-
+    // 如果display的值为 none 或以 table 开头，则需要替换掉
     // Swappable if display is none or starts with table
+    // 除了 "table", "table-cell", "table-caption"
     // except "table", "table-cell", or "table-caption"
+    // display 的值，请访问 https://developer.mozilla.org/en-US/docs/CSS/display
     // See here for display values: https://developer.mozilla.org/en-US/docs/CSS/display
+    // 源码6698行
     rdisplayswap = /^(none|table(?!-c[ea]).+)/,
+
     rcustomProp = /^--/,
+    //display:none -->display: "block", position: "absolute", visibility: "hidden"
     cssShow = { position: "absolute", visibility: "hidden", display: "block" },
+
     cssNormalTransform = {
       letterSpacing: "0",
       fontWeight: "400"
     },
 
     cssPrefixes = [ "Webkit", "Moz", "ms" ],
+
     emptyStyle = document.createElement( "div" ).style;
 
 // Return a css property mapped to a potentially vendor prefixed property
@@ -6868,11 +6875,14 @@
 
   jQuery.extend( {
 
+    // 添加style钩子（cssHooks）来覆盖默认值
     // Add in style property hooks for overriding the default
+    // 定义 读、写 一个style属性
     // behavior of getting and setting a style property
     cssHooks: {
       opacity: {
         get: function( elem, computed ) {
+          console.log(elem, computed,'computed6878')
           if ( computed ) {
 
             // We should always get a number back from opacity
@@ -7030,14 +7040,35 @@
     }
   } );
 
+  //源码7033行
+  //$.each(obj,callback(index,item){})
   jQuery.each( [ "height", "width" ], function( i, dimension ) {
+    //i:0 dimension:height
+    //i:1 dimension:width
+
+    //cssHooks是用来定义style方法的
     jQuery.cssHooks[ dimension ] = {
+      //读
+      //$().width()
+      //参数：elem:目标DOM元素/computed:true/extra:"content"
       get: function( elem, computed, extra ) {
+        console.log(elem, computed, extra,'extra7040')
         if ( computed ) {
 
+          // 某些元素是有尺寸的信息的，如果我们隐式地显示它们，前提是它必须有一个display值
           // Certain elements can have dimension info if we invisibly show them
           // but it must have a current display style that would benefit
+
+          // 上面这句话的意思是，某个元素用display:none，将它从页面上去掉了，此时是获取不到它的宽度的
+          // 如果要获取它的宽度的话，需要隐式地显示它们，比如display:absolute，visible:hidden
+          // 然后再去获取它的宽度
+
+          // block:false
+          // none:true
+          // rdisplayswap
           return rdisplayswap.test( jQuery.css( elem, "display" ) ) &&
+
+          // 兼容性的考虑，直接看 getWidthOrHeight
 
           // Support: Safari 8+
           // Table columns in Safari have non-zero offsetWidth & zero
@@ -7045,6 +7076,10 @@
           // Support: IE <=11 only
           // Running getBoundingClientRect on a disconnected node
           // in IE throws an error.
+
+          // display为none的话，elem.getBoundingClientRect().width=0
+          // elem.getClientRects() 返回CSS边框的集合
+          // https://developer.mozilla.org/zh-CN/docs/Web/API/Element/getClientRects
           ( !elem.getClientRects().length || !elem.getBoundingClientRect().width ) ?
             swap( elem, cssShow, function() {
               return getWidthOrHeight( elem, dimension, extra );
@@ -7052,8 +7087,11 @@
             getWidthOrHeight( elem, dimension, extra );
         }
       },
-
+      //写
+      //$().width(55)
       set: function( elem, value, extra ) {
+        console.log(elem, value, extra,'extra7062')
+
         var matches,
           styles = getStyles( elem ),
           isBorderBox = jQuery.css( elem, "boxSizing", false, styles ) === "border-box",
@@ -10583,7 +10621,7 @@
 
       // position:fixed elements are offset from the viewport, which itself always has zero offset
       // position:fixed的元素，是相对于浏览器窗口进行定位的，
-      // 所以它的偏移就是getBoundingClientRect()，即获取某个元素相对于视窗的位置
+      // 所以它的偏移是getBoundingClientRect()，即获取某个元素相对于视窗的位置
       if ( jQuery.css( elem, "position" ) === "fixed" ) {
 
         // Assume position:fixed implies availability of getBoundingClientRect
@@ -10613,8 +10651,8 @@
 
           // Incorporate borders into its offset, since they are outside its content origin
           parentOffset = jQuery( offsetParent ).offset();
-          // 这两行代码的意思是parentOffset的offset()是要不包括边框的宽度的，
-          // 所以需要去掉
+          // 这两行代码的意思是父元素的offset()要从padding算起，不包括border
+          // 所以需要去掉border
           // jQuery.css( element, "borderTopWidth", true )的 true 表示返回数字，而不带单位 px
           parentOffset.top += jQuery.css( offsetParent, "borderTopWidth", true );
           parentOffset.left += jQuery.css( offsetParent, "borderLeftWidth", true );
@@ -10640,7 +10678,8 @@
     // and might be considered as more preferable results.
     //
     // This logic, however, is not guaranteed and can change at any point in the future
-
+    //返回目标元素的第一个父元素
+    //源码10644行
     offsetParent: function() {
       return this.map( function() {
         var offsetParent = this.offsetParent;
@@ -10707,12 +10746,18 @@
     );
   } );
 
-
+  //创建 innerHeight, innerWidth, height, width, outerHeight and outerWidth 方法
 // Create innerHeight, innerWidth, height, width, outerHeight and outerWidth methods
+  //$.each(obj,callback(key,value))
   jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
+    //name:Height type:height
+    //name:Width type:width
     jQuery.each( { padding: "inner" + name, content: type, "": "outer" + name },
       function( defaultExtra, funcName ) {
+        //defaultExtra:padding/content/""
+        //funcName:innerWidth/width/outerWidth
 
+        //margin 属性只有 outerHeight, outerWidth 会有
         // Margin is only for outerHeight, outerWidth
         jQuery.fn[ funcName ] = function( margin, value ) {
           var chainable = arguments.length && ( defaultExtra || typeof margin !== "boolean" ),

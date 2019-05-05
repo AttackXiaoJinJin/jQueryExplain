@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery源码解析之width()</title>
+</head>
+<body>
+<script src="jQuery.js"></script>
+<p id="pTwo">这是divTwo</p>
+<script>
+  let $p=$("#pTwo")
+  $p.css('display','none')
+  
+  console.log($p[0].getBoundingClientRect(),'getBoundingClientRect14') //0
+  console.log($p[0].getClientRects(),'getClientRects15') //0
+  console.log($p.width(),'width15')
+  
+  
+
+
+</script>
+</body>
+</html>
