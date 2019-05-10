@@ -4667,7 +4667,7 @@
 
   var rcssNum = new RegExp( "^(?:([+-])=|)(" + pnum + ")([a-z%]*)$", "i" );
 
-
+  //源码4670行
   var cssExpand = [ "Top", "Right", "Bottom", "Left" ];
 
   var isHiddenWithinTree = function( elem, el ) {
@@ -6498,8 +6498,10 @@
   
   var rnumnonpx = new RegExp( "^(" + pnum + ")(?!px)[a-z%]+$", "i" );
 
+  //获取该DOM元素的所有css属性的值
+  //源码6501行
   var getStyles = function( elem ) {
-
+    // 兼容性处理，旨在拿到正确的view
     // Support: IE <=11 only, Firefox <=30 (#15098, #14150)
     // IE throws on elements created in popups
     // FF meanwhile throws on frame elements through "defaultView.getComputedStyle"
@@ -6508,7 +6510,7 @@
     if ( !view || !view.opener ) {
       view = window;
     }
-
+    //获取所有CSS属性的值
     return view.getComputedStyle( elem );
   };
 
@@ -6606,9 +6608,13 @@
     } );
   } )();
 
-  //elem, "position"
-  //源码6609行
+
+  // 获取元素的当前属性的值
+  // elem, "position"
+  // elem,width,styles
+  // 源码6609行
   function curCSS( elem, name, computed ) {
+
     var width, minWidth, maxWidth, ret,
 
       // Support: Firefox 51+
@@ -6623,13 +6629,15 @@
     //   .css('filter') (IE 9 only, #12537)
     //   .css('--customProperty) (#3144)
     if ( computed ) {
-      //返回元素的属性的默认值
+      //返回元素的属性的当前值
       //position:static
       //top:0px
       //left:0px
       ret = computed.getPropertyValue( name ) || computed[ name ];
       console.log(ret,'ret6627')
+      //如果目标属性值为空并且目标元素不在目标元素所在的文档内（感觉这种情况好奇怪）
       if ( ret === "" && !jQuery.contains( elem.ownerDocument, elem ) ) {
+        //使用jQuery.style方法来获取目标元素的属性值
         ret = jQuery.style( elem, name );
       }
 
@@ -6660,7 +6668,8 @@
     }
 
     return ret !== undefined ?
-
+      // 兼容性，IE下返回的zIndex的值是数字，
+      // 而使用jQuery获取的属性都是返回字符串
       // Support: IE <=9 - 11 only
       // IE returns zIndex value as an integer.
       ret + "" :
@@ -6689,7 +6698,7 @@
 
 
   var
-    // 如果display的值为 none 或以 table 开头，则需要替换掉
+    // 检测 display 的值是否为 none 或以 table 开头
     // Swappable if display is none or starts with table
     // 除了 "table", "table-cell", "table-caption"
     // except "table", "table-cell", or "table-caption"
@@ -6755,27 +6764,40 @@
       value;
   }
 
+  //elem:DOM节点/dimension:width/box:content/isBorderBox:true/false/styles:styles/computedVal:55
+  //源码6758行
   function boxModelAdjustment( elem, dimension, box, isBorderBox, styles, computedVal ) {
     var i = dimension === "width" ? 1 : 0,
       extra = 0,
       delta = 0;
 
+    // 如果 boxSizing 的属性值，而不是 borderBox 的话，就直接返回 0
     // Adjustment may not be necessary
     if ( box === ( isBorderBox ? "border" : "content" ) ) {
+      console.log('content1111','content6768')
       return 0;
     }
-
+    //小技巧
+    //i 的初始值是 0/1
+    //然后 cssExpand = [ "Top", "Right", "Bottom", "Left" ]
     for ( ; i < 4; i += 2 ) {
 
       // Both box models exclude margin
       if ( box === "margin" ) {
+        //var cssExpand = [ "Top", "Right", "Bottom", "Left" ];
+        //width 的话，就是 marginRight/marginLeft
+        //height 的话，就是 marginTop/marginBottom
+        //jQuery.css( elem, box + cssExpand[ i ], true, styles ) 的意思就是
+        //返回 marginRight/marginLeft/marginTop/marginBottom 的数字，并给 delta 加上
         delta += jQuery.css( elem, box + cssExpand[ i ], true, styles );
       }
 
       // If we get here with a content-box, we're seeking "padding" or "border" or "margin"
+      // 如果不是 borderBox 的话
       if ( !isBorderBox ) {
 
         // Add padding
+        // 添加 padding-xxx
         delta += jQuery.css( elem, "padding" + cssExpand[ i ], true, styles );
 
         // For "border" or "margin", add border
@@ -6790,13 +6812,14 @@
         // If we get here with a border-box (content + padding + border), we're seeking "content" or
         // "padding" or "margin"
       } else {
-
+        // 去掉 padding
         // For "content", subtract padding
         if ( box === "content" ) {
           delta -= jQuery.css( elem, "padding" + cssExpand[ i ], true, styles );
         }
 
         // For "content" or "padding", subtract border
+        // 去掉 borderXXXWidth
         if ( box !== "margin" ) {
           delta -= jQuery.css( elem, "border" + cssExpand[ i ] + "Width", true, styles );
         }
@@ -6809,6 +6832,7 @@
       // offsetWidth/offsetHeight is a rounded sum of content, padding, scroll gutter, and border
       // Assuming integer scroll gutter, subtract the rest and round down
       delta += Math.max( 0, Math.ceil(
+        //就是将dimension的首字母做个大写
         elem[ "offset" + dimension[ 0 ].toUpperCase() + dimension.slice( 1 ) ] -
         computedVal -
         delta -
@@ -6819,15 +6843,25 @@
 
     return delta;
   }
-
+  //获取 width 或 height
+  //dimension:width/extra:"content"
+  //源码6823行
   function getWidthOrHeight( elem, dimension, extra ) {
 
     // Start with computed style
     var styles = getStyles( elem ),
+      //elem,width,styles
       val = curCSS( elem, dimension, styles ),
+      //判断 box-sizing 的值是否 是 border-box
+      //如果启用了 box-sizing，js 的 width 是会算上 margin、border、padding的
+      //如果不启用的话，js 的 width 只会算 content
+      //jQuery 的 width 自始至终都是算的 content
       isBorderBox = jQuery.css( elem, "boxSizing", false, styles ) === "border-box",
+
       valueIsBorderBox = isBorderBox;
 
+    // console.log(styles,'styles6855')
+    // 火狐兼容性处理，可不看
     // Support: Firefox <=54
     // Return a confounding non-pixel value or feign ignorance, as appropriate.
     if ( rnumnonpx.test( val ) ) {
@@ -6837,36 +6871,45 @@
       val = "auto";
     }
 
+    // 通过 getComputedStyle 检查 style 属性，并返回可靠的 style 属性，这样可以防止浏览器返回不可靠的值
     // Check for style in case a browser which returns unreliable values
     // for getComputedStyle silently falls back to the reliable elem.style
     valueIsBorderBox = valueIsBorderBox &&
       ( support.boxSizingReliable() || val === elem.style[ dimension ] );
-
+    console.log(valueIsBorderBox,'valueIsBorderBox6853')
     // Fall back to offsetWidth/offsetHeight when value is "auto"
     // This happens for inline elements with no explicit setting (gh-3571)
     // Support: Android <=4.1 - 4.3 only
     // Also use offsetWidth/offsetHeight for misreported inline dimensions (gh-3602)
+
+    //parseFloat('55px')=55
+    //如果 val 值是 auto，或者 (val 没有值，并且 display 属性是 inline)
     if ( val === "auto" ||
       !parseFloat( val ) && jQuery.css( elem, "display", false, styles ) === "inline" ) {
 
       val = elem[ "offset" + dimension[ 0 ].toUpperCase() + dimension.slice( 1 ) ];
-
+      console.log(val,'val6862')
       // offsetWidth/offsetHeight provide border-box values
       valueIsBorderBox = true;
     }
-
     // Normalize "" and auto
+    // 55
     val = parseFloat( val ) || 0;
-
+    console.log(val,extra,'val6869')
     // Adjust for the element's box model
     return ( val +
       boxModelAdjustment(
+        //DOM节点
         elem,
+        //width
         dimension,
+        //content
         extra || ( isBorderBox ? "border" : "content" ),
+        //true/false
         valueIsBorderBox,
+        //styles
         styles,
-
+        //55
         // Provide the current computed size to request scroll gutter calculation (gh-3589)
         val
       )
@@ -7065,7 +7108,7 @@
 
           // block:false
           // none:true
-          // rdisplayswap
+          // rdisplayswap的作用是检测 none和table开头的
           return rdisplayswap.test( jQuery.css( elem, "display" ) ) &&
 
           // 兼容性的考虑，直接看 getWidthOrHeight
@@ -7084,6 +7127,8 @@
             swap( elem, cssShow, function() {
               return getWidthOrHeight( elem, dimension, extra );
             } ) :
+            //$().width()情况
+            //dimension:width/extra:"content"
             getWidthOrHeight( elem, dimension, extra );
         }
       },

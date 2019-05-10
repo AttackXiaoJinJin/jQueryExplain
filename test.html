@@ -34,6 +34,30 @@
 
   console.log([].push("<p>test1</p><div>test2</div>"));
 
+  let arr=[]
+  arr[10]=11
+  console.log(arr.length); //11
+
+  arr[-1]=-1
+  console.log(arr.length) //11
+
+  arr[3.14]=3.14
+  console.log(arr.length) //11
+  //===================================
+  let arr1=[]
+
+  arr1[2.1]=2.1
+  console.log(arr1[2.1],'arr144') //2.1
+  console.log(arr1.length,'arr145') //0
+
+  arr1[1]=1
+  console.log(arr1.length,'arr147') //2
+  //========================
+  let arr2=[]
+  arr2[-1]=-1
+  console.log(arr2.length,'arr253') //0
+
+
 </script>
 
 

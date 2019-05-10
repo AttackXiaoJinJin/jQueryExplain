@@ -6,16 +6,32 @@
 </head>
 <body>
 <script src="jQuery.js"></script>
-<p id="pTwo">这是divTwo</p>
+<div id="pTwo"
+     style="width: 55px;
+     margin-left:2px;
+     padding-left: 2px;
+     /*box-sizing: border-box;*/
+     /*box-sizing: content-box;*/
+     /*display: none;*/
+     border:1px red solid;">这是divTwo</div>
 <script>
-  let $p=$("#pTwo")
-  $p.css('display','none')
-  
-  console.log($p[0].getBoundingClientRect(),'getBoundingClientRect14') //0
-  console.log($p[0].getClientRects(),'getClientRects15') //0
-  console.log($p.width(),'width15')
-  
-  
+  console.log($("#pTwo").width(),'width15'); //53
+
+
+  // let $p=$("#pTwo")
+
+
+  // $p.css('display','none')
+  // $p.width(55)
+
+  // console.log($p.width(),'width16'); //35 55
+  // console.log($p[0].getBoundingClientRect(),'getBoundingClientRect14') //0
+  // console.log($p[0].getClientRects(),'getClientRects15') //0
+  // console.log($p.width(),'width15')
+  // console.log(document.getElementById("pTwo").style.width,'width24')
+
+  let a=document.getElementById("pTwo")
+  console.log(a.ownerDocument.defaultView.getComputedStyle(a).getPropertyValue('width'),'width33');
 
 
 </script>
