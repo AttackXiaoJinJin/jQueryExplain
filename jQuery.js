@@ -6752,18 +6752,33 @@
     return ret;
   }
 
+  //设置真正的 width 值
   function setPositiveNumber( elem, value, subtract ) {
-
+    // 标准化相对值
     // Any relative (+/-) values have already been
     // normalized at this point
-    var matches = rcssNum.exec( value );
-    return matches ?
 
+    //[
+    // "55px",
+    // undefined,
+    // "55",
+    // "px",
+    // index: 0,
+    // input: "55px",
+    // groups: undefined,
+    // index: 0
+    // input: "55px"
+    // ]
+    var matches = rcssNum.exec( value );
+    console.log(matches,( subtract || 0 ),'matches6760')
+    return matches ?
+      //(0,55-(-4))+'px'
+      //Math.max(a,b) 返回两个指定的数中带有较大的值的那个数
       // Guard against undefined "subtract", e.g., when used as in cssHooks
       Math.max( 0, matches[ 2 ] - ( subtract || 0 ) ) + ( matches[ 3 ] || "px" ) :
       value;
   }
-
+  //参数说明：
   //elem:DOM节点/dimension:width/box:content/isBorderBox:true/false/styles:styles/computedVal:55
   //源码6758行
   function boxModelAdjustment( elem, dimension, box, isBorderBox, styles, computedVal ) {
@@ -6794,7 +6809,7 @@
 
       // If we get here with a content-box, we're seeking "padding" or "border" or "margin"
       // 如果不是 borderBox 的话
-      if ( !isBorderBox ) {
+        if ( !isBorderBox ) {
 
         // Add padding
         // 添加 padding-xxx
@@ -6815,12 +6830,14 @@
         // 去掉 padding
         // For "content", subtract padding
         if ( box === "content" ) {
+          //width，去掉paddingLeft,paddingRight的值
           delta -= jQuery.css( elem, "padding" + cssExpand[ i ], true, styles );
         }
 
         // For "content" or "padding", subtract border
         // 去掉 borderXXXWidth
         if ( box !== "margin" ) {
+          //width，去掉borderLeftWidth,borderRightWidth的值
           delta -= jQuery.css( elem, "border" + cssExpand[ i ] + "Width", true, styles );
         }
       }
@@ -6875,8 +6892,10 @@
     // Check for style in case a browser which returns unreliable values
     // for getComputedStyle silently falls back to the reliable elem.style
     valueIsBorderBox = valueIsBorderBox &&
+      //val值是通过a.ownerDocument.defaultView.getComputedStyle(a).getPropertyValue('width')得出的
+      //但又通过js原生的style.width来取值并与val相比较
       ( support.boxSizingReliable() || val === elem.style[ dimension ] );
-    console.log(valueIsBorderBox,'valueIsBorderBox6853')
+    console.log(val === elem.style[ dimension ],'valueIsBorderBox6853')
     // Fall back to offsetWidth/offsetHeight when value is "auto"
     // This happens for inline elements with no explicit setting (gh-3571)
     // Support: Android <=4.1 - 4.3 only
@@ -6895,9 +6914,10 @@
     // Normalize "" and auto
     // 55
     val = parseFloat( val ) || 0;
-    console.log(val,extra,'val6869')
+      console.log(val,extra,'val6869')
     // Adjust for the element's box model
     return ( val +
+      //borderBox走这里
       boxModelAdjustment(
         //DOM节点
         elem,
@@ -7125,6 +7145,7 @@
           // https://developer.mozilla.org/zh-CN/docs/Web/API/Element/getClientRects
           ( !elem.getClientRects().length || !elem.getBoundingClientRect().width ) ?
             swap( elem, cssShow, function() {
+              console.log(cssShow,'cssShow7128')
               return getWidthOrHeight( elem, dimension, extra );
             } ) :
             //$().width()情况
@@ -7134,12 +7155,14 @@
       },
       //写
       //$().width(55)
+      //elem:DOM节点，value：55，extra：content
       set: function( elem, value, extra ) {
         console.log(elem, value, extra,'extra7062')
 
         var matches,
           styles = getStyles( elem ),
           isBorderBox = jQuery.css( elem, "boxSizing", false, styles ) === "border-box",
+          //-4
           subtract = extra && boxModelAdjustment(
             elem,
             dimension,
@@ -7147,9 +7170,13 @@
             isBorderBox,
             styles
           );
-
+        console.log(subtract,'subtract7173')
+        // 如果是 borderBox 的话，通过 offset 计算的尺寸是不准的，
+        // 所以要假设成 content-box 来获取 border 和 padding
         // Account for unreliable border-box dimensions by comparing offset* to computed and
         // faking a content-box to get border and padding (gh-3699)
+        //true true 'static'
+        //调整 subtract
         if ( isBorderBox && support.scrollboxSize() === styles.position ) {
           subtract -= Math.ceil(
             elem[ "offset" + dimension[ 0 ].toUpperCase() + dimension.slice( 1 ) ] -
@@ -7157,16 +7184,17 @@
             boxModelAdjustment( elem, dimension, "border", false, styles ) -
             0.5
           );
+          console.log(subtract,'subtract7169')
         }
-
+        // 如果需要进行值调整，则转换为像素
         // Convert to pixels if value adjustment is needed
+        //如果是 borderBox 并且 value 的单位不是 px，则会转换成像素
         if ( subtract && ( matches = rcssNum.exec( value ) ) &&
           ( matches[ 3 ] || "px" ) !== "px" ) {
-
           elem.style[ dimension ] = value;
           value = jQuery.css( elem, dimension );
         }
-
+        //59px
         return setPositiveNumber( elem, value, subtract );
       }
     };
@@ -10802,7 +10830,7 @@
         //defaultExtra:padding/content/""
         //funcName:innerWidth/width/outerWidth
 
-        //margin 属性只有 outerHeight, outerWidth 会有
+        // margin 属性只有 outerHeight, outerWidth
         // Margin is only for outerHeight, outerWidth
         jQuery.fn[ funcName ] = function( margin, value ) {
           var chainable = arguments.length && ( defaultExtra || typeof margin !== "boolean" ),
