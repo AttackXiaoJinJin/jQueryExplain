@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery源码解析之addClass()</title>
+</head>
+<style>
+  .divOne{
+    border:1px red solid;
+  }
+  .divTwo{
+
+  }
+  .divThree{
+
+  }
+
+</style>
+<body>
+<script src="jQuery.js"></script>
+<div id="one">这是one</div>
+<script>
+ $("#one").addClass('divOne divTwo')
+ $("#one").addClass('divThree')
+
+ let one=document.querySelector("#one")
+ one.getAttribute("class") //divOne divTwo
+
+
+</script>
+</body>
+</html>

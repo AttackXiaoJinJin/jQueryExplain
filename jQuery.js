@@ -3347,7 +3347,8 @@
       return this.pushStack( matched );
     };
   } );
-  //匹配空白、水平制表符、回车、换行、换页
+  //排除匹配空白、水平制表符、回车、换行、换页
+  //即返回除空白、水平制表符、回车、换行、换页外的元素（以数组形式返回）
   //源码3305行
   var rnothtmlwhite = ( /[^\x20\t\r\n\f]+/g );
 
@@ -5337,7 +5338,7 @@
       }
 
       // Once for each type.namespace in types; type may be omitted
-      //rnothtmlwhite:匹配空白 水平制表符 回车 换行 换页
+      //rnothtmlwhite:排除匹配空白 水平制表符 回车 换行 换页
       types = ( types || "" ).match( rnothtmlwhite ) || [ "" ];
       t = types.length;
       while ( t-- ) {
@@ -8365,8 +8366,8 @@
   } );
 
 
-
-
+  // 将vaues以空格分开，再以空格拼接
+  // 源码8370行
   // Strip and collapse whitespace according to HTML spec
   // https://infra.spec.whatwg.org/#strip-and-collapse-ascii-whitespace
   function stripAndCollapse( value ) {
@@ -8374,42 +8375,56 @@
     return tokens.join( " " );
   }
 
-
+  //获取目标元素的类名
+  //源码8377行
   function getClass( elem ) {
     return elem.getAttribute && elem.getAttribute( "class" ) || "";
   }
-
+  //将（多个）类名转为数组形式
+  //源码8382行
   function classesToArray( value ) {
+    //元素的className如果有多个类名的话，是以数组形式保存的，那就直接返回
     if ( Array.isArray( value ) ) {
       return value;
     }
+    //如果元素类名是string类型的话
     if ( typeof value === "string" ) {
       return value.match( rnothtmlwhite ) || [];
     }
     return [];
   }
 
+  //这边是addClass,removeClass,toggleClass,hasClass的集合
+  //源码8393行
   jQuery.fn.extend( {
     addClass: function( value ) {
       var classes, elem, cur, curValue, clazz, j, finalValue,
         i = 0;
-
+      //如果addClass(value)的value是一个function
+      //那么就通过call让目标元素this调用该function
       if ( isFunction( value ) ) {
         return this.each( function( j ) {
+          // function(index,currentclass)
+          // index 对应 j，作用是获取多个目标元素的下标；
+          // currentClass 对应 getClass(this)，作用是获取当前元素的类名，方便加空格
           jQuery( this ).addClass( value.call( this, j, getClass( this ) ) );
         } );
       }
-
+      
       classes = classesToArray( value );
-
       if ( classes.length ) {
+        //多个目标元素
         while ( ( elem = this[ i++ ] ) ) {
+          //获取当前值
           curValue = getClass( elem );
+          //如果目标元素是元素节点并且用空格左右包起来 " "+value+" "
           cur = elem.nodeType === 1 && ( " " + stripAndCollapse( curValue ) + " " );
 
           if ( cur ) {
             j = 0;
+            //一个个类名
             while ( ( clazz = classes[ j++ ] ) ) {
+              //当前元素没有和要添加的类名重复的话就添加
               if ( cur.indexOf( " " + clazz + " " ) < 0 ) {
                 cur += clazz + " ";
               }
@@ -8418,6 +8433,7 @@
             // Only assign if different to avoid unneeded rendering.
             finalValue = stripAndCollapse( cur );
             if ( curValue !== finalValue ) {
+              //最后通过setAttribute，添加类名
               elem.setAttribute( "class", finalValue );
             }
           }
