@@ -8410,7 +8410,7 @@
           jQuery( this ).addClass( value.call( this, j, getClass( this ) ) );
         } );
       }
-      
+      //将（多个）类名转为数组形式
       classes = classesToArray( value );
       if ( classes.length ) {
         //多个目标元素
@@ -8429,7 +8429,8 @@
                 cur += clazz + " ";
               }
             }
-
+            //最后，确认经过处理后的类名集合是否和处理前的类名集合相同
+            //如果相同，就setAttribute，重新渲染，否则不重新渲染（性能优化）
             // Only assign if different to avoid unneeded rendering.
             finalValue = stripAndCollapse( cur );
             if ( curValue !== finalValue ) {
@@ -8442,21 +8443,21 @@
 
       return this;
     },
-
+    //移除类
     removeClass: function( value ) {
       var classes, elem, cur, curValue, clazz, j, finalValue,
         i = 0;
-
+      //作用同上
       if ( isFunction( value ) ) {
         return this.each( function( j ) {
           jQuery( this ).removeClass( value.call( this, j, getClass( this ) ) );
         } );
       }
-
+      //如果没有规定参数，则删除所有类
       if ( !arguments.length ) {
         return this.attr( "class", "" );
       }
-
+      //将（多个）类名转为数组形式
       classes = classesToArray( value );
 
       if ( classes.length ) {
@@ -8469,13 +8470,14 @@
           if ( cur ) {
             j = 0;
             while ( ( clazz = classes[ j++ ] ) ) {
-
+              // 如果当前元素的类名里有要移除的类，
+              // 就将该类替换成" "
               // Remove *all* instances
               while ( cur.indexOf( " " + clazz + " " ) > -1 ) {
                 cur = cur.replace( " " + clazz + " ", " " );
               }
             }
-
+            //同上
             // Only assign if different to avoid unneeded rendering.
             finalValue = stripAndCollapse( cur );
             if ( curValue !== finalValue ) {
@@ -8487,15 +8489,18 @@
 
       return this;
     },
+    //切换类
 
+    //stateVal为true，则添加类，false则移除类
     toggleClass: function( value, stateVal ) {
       var type = typeof value,
+        //如果value是string类型或者是数组类型的话，为true，反之为false
         isValidValue = type === "string" || Array.isArray( value );
-
+      //true添加类，false移除类
       if ( typeof stateVal === "boolean" && isValidValue ) {
         return stateVal ? this.addClass( value ) : this.removeClass( value );
       }
-
+      //同上
       if ( isFunction( value ) ) {
         return this.each( function( i ) {
           jQuery( this ).toggleClass(
@@ -8516,18 +8521,22 @@
           classNames = classesToArray( value );
 
           while ( ( className = classNames[ i++ ] ) ) {
-
+            //如果目标元素已经有要toggle的className，那么就移除它
             // Check each className given, space separated list
             if ( self.hasClass( className ) ) {
               self.removeClass( className );
             } else {
+              //否则就添加类
               self.addClass( className );
             }
           }
 
           // Toggle whole class name
-        } else if ( value === undefined || type === "boolean" ) {
+        }
+        //如果$.toggleClass()没有值或者该值为布尔值
+        else if ( value === undefined || type === "boolean" ) {
           className = getClass( this );
+          //如果目标元素有类的话，就先用__className__属性保存类名
           if ( className ) {
 
             // Store className if set
@@ -8538,7 +8547,11 @@
           // then remove the whole classname (if there was one, the above saved it).
           // Otherwise bring back whatever was previously saved (if anything),
           // falling back to the empty string if nothing was stored.
+          //如果目标元素存在setAttribute的方法话
           if ( this.setAttribute ) {
+            //如果已有类名/value=false，则移除所有类名
+            //如果没有类名并且value=true，
+            //则从dataPriv中重新获取之前保存过的__className__当做目标元素的类名
             this.setAttribute( "class",
               className || value === false ?
                 "" :
@@ -8548,7 +8561,7 @@
         }
       } );
     },
-
+    //检查目标元素是否包含指定的类
     hasClass: function( selector ) {
       var className, elem,
         i = 0;
@@ -8556,6 +8569,7 @@
       className = " " + selector + " ";
       while ( ( elem = this[ i++ ] ) ) {
         if ( elem.nodeType === 1 &&
+          //关键代码
           ( " " + stripAndCollapse( getClass( elem ) ) + " " ).indexOf( className ) > -1 ) {
           return true;
         }
