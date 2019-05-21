@@ -8397,6 +8397,8 @@
   //这边是addClass,removeClass,toggleClass,hasClass的集合
   //源码8393行
   jQuery.fn.extend( {
+    //向目标元素添加一个或多个类名
+    //源码8401行
     addClass: function( value ) {
       var classes, elem, cur, curValue, clazz, j, finalValue,
         i = 0;
@@ -8444,6 +8446,7 @@
       return this;
     },
     //移除类
+    //源码8449行
     removeClass: function( value ) {
       var classes, elem, cur, curValue, clazz, j, finalValue,
         i = 0;
@@ -8490,8 +8493,8 @@
       return this;
     },
     //切换类
-
     //stateVal为true，则添加类，false则移除类
+    //源码8497行
     toggleClass: function( value, stateVal ) {
       var type = typeof value,
         //如果value是string类型或者是数组类型的话，为true，反之为false
@@ -8562,6 +8565,7 @@
       } );
     },
     //检查目标元素是否包含指定的类
+    //源码8568行
     hasClass: function( selector ) {
       var className, elem,
         i = 0;
