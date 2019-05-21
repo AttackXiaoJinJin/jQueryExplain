@@ -10907,19 +10907,24 @@
   } );
 
 
+  //这种写法还第一次见，将所有鼠标事件写成字符串再换成数组
+  //再一一绑定到DOM节点上去
   jQuery.each( ( "blur focus focusin focusout resize scroll click dblclick " +
     "mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave " +
     "change select submit keydown keypress keyup contextmenu" ).split( " " ),
     function( i, name ) {
-
+      //事件绑定
       // Handle event binding
       jQuery.fn[ name ] = function( data, fn ) {
         return arguments.length > 0 ?
+          //如果有参数的话，就用原生js的on绑定
           this.on( name, null, data, fn ) :
+          //否则使用trigger
           this.trigger( name );
       };
     } );
 
+  //
   jQuery.fn.extend( {
     hover: function( fnOver, fnOut ) {
       return this.mouseenter( fnOver ).mouseleave( fnOut || fnOver );
