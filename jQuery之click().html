@@ -9,8 +9,12 @@
 <script src="jQuery.js"></script>
 <div id="one">这是one</div>
 <script>
- $("#one").click(function(){
-   console.log('one被点击了')
+ // $("#one").click(function(){
+ //   console.log('one被点击了')
+ // })
+
+ $("#one").on("click",function () {
+   console.log("one被点击了")
  })
 
 

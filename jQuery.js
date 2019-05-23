@@ -5809,11 +5809,14 @@
     };
   } );
 
+  //绑定事件的方法
+  //源码5812行
   jQuery.fn.extend( {
-
+    //$().on('click',function()=<{})
     on: function( types, selector, data, fn ) {
       return on( this, types, selector, data, fn );
     },
+    //只执行一次
     one: function( types, selector, data, fn ) {
       return on( this, types, selector, data, fn, 1 );
     },
