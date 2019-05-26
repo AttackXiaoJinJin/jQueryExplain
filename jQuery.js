@@ -354,8 +354,10 @@
   };
 
   jQuery.extend( {
-
+    //相当于jQuery为每一个元素取唯一的id
+    ///\D/g : 去掉非数字的字符
     // Unique for each copy of jQuery on the page
+    //源码360行
     expando: "jQuery" + ( version + Math.random() ).replace( /\D/g, "" ),
 
     // Assume jQuery is ready without the ready module
@@ -4204,12 +4206,14 @@
   };
 
 
-
-
+  //目标元素的jQuery id
+  //源码4209行
   function Data() {
     this.expando = jQuery.expando + Data.uid++;
   }
-
+  //Data既是一个function，也是Object
+  // 可以给它赋一个属性uid
+  //源码4213行
   Data.uid = 1;
 
   Data.prototype = {
@@ -4356,6 +4360,9 @@
       return cache !== undefined && !jQuery.isEmptyObject( cache );
     }
   };
+
+  //取唯一id
+  //源码4361行
   var dataPriv = new Data();
 
   var dataUser = new Data();
@@ -5119,7 +5126,13 @@
   var
     rkeyEvent = /^key/,
     rmouseEvent = /^(?:mouse|pointer|contextmenu|drag|drop)|click/,
+    //事件类型的命名空间
+    //举例：var arr1 = "click.aaa.bbb".match(rtypenamespace);
+    //console.log(arr1);//["click.aaa.bbb", "click", "aaa.bbb", index: 0, input: "click.aaa.bbb"]
+    //源码5131行
     rtypenamespace = /^([^.]*)(?:\.(.+)|)/;
+
+
 
   function returnTrue() {
     return true;
@@ -5129,6 +5142,8 @@
     return false;
   }
 
+  //获取获得焦点的元素
+  //源码5133行
 // Support: IE <=9 only
 // See #13393 for more info
   function safeActiveElement() {
@@ -5137,9 +5152,12 @@
     } catch ( err ) { }
   }
 
+  //绑定事件的on方法
+  //源码5143行
+  //目标元素，类型（click,mouseenter,focusin,xxx）,回调函数function(){xxx}
   function on( elem, types, selector, data, fn, one ) {
     var origFn, type;
-
+    //这边可以不看
     // Types can be a map of types/handlers
     if ( typeof types === "object" ) {
 
@@ -5155,49 +5173,67 @@
       }
       return elem;
     }
-
+    //直接调用$().on()的话会走这边
     if ( data == null && fn == null ) {
 
       // ( types, fn )
+      //fn赋值为selector，即function(){}
       fn = selector;
+      //再将selector置为undefined
+      //注意这个写法，连等赋值
       data = selector = undefined;
-    } else if ( fn == null ) {
+    }
+    //调用像$().click()的话会走这边
+    else if ( fn == null ) {
       if ( typeof selector === "string" ) {
 
         // ( types, selector, fn )
         fn = data;
         data = undefined;
       } else {
-
+        
         // ( types, data, fn )
         fn = data;
         data = selector;
         selector = undefined;
       }
     }
-    if ( fn === false ) {
-      fn = returnFalse;
-    } else if ( !fn ) {
-      return elem;
-    }
 
+    if ( fn === false ) {
+
+      fn = returnFalse;
+
+    } else if ( !fn ) {
+
+      return elem;
+
+    }
+    //one()走这里
     if ( one === 1 ) {
+      //将fn赋给origFn后，再定义fn
       origFn = fn;
       fn = function( event ) {
-
+        //将绑定给目标元素的事件传给fn，
+        //并通过$().off()卸载掉
         // Can use an empty set, since event contains the info
         jQuery().off( event );
+        //在origFn运行一次的基础上，让origFn调用fn方法，arguments即event
         return origFn.apply( this, arguments );
       };
-
+      //让fn和origFn使用相同的guid，这样就能移除origFn方法
       // Use same guid so caller can remove using origFn
       fn.guid = origFn.guid || ( origFn.guid = jQuery.guid++ );
     }
+
     return elem.each( function() {
+      //最终调动$.event.add方法
       jQuery.event.add( this, types, fn, data, selector );
+
     } );
   }
 
+
+  //源码5235行
   /*
  * Helper functions for managing events -- not part of the public interface.
  * Props to Dean Edwards' addEvent library for many of the ideas.
@@ -5205,73 +5241,86 @@
   jQuery.event = {
 
     global: {},
-
+    //源码5241行
+    //this, types, fn, data, selector
     add: function( elem, types, handler, data, selector ) {
 
       var handleObjIn, eventHandle, tmp,
         events, t, handleObj,
         special, handlers, type, namespaces, origType,
+        //elemData正是目标元素jQuery中的id属性
+        //初始值是{}
         elemData = dataPriv.get( elem );
-
       // Don't attach events to noData or text/comment nodes (but allow plain objects)
       if ( !elemData ) {
         return;
       }
-
+      //调用者可以传入一个自定义数据对象来代替处理程序
       // Caller can pass in an object of custom data in lieu of the handler
       if ( handler.handler ) {
         handleObjIn = handler;
         handler = handleObjIn.handler;
         selector = handleObjIn.selector;
       }
-
+      //确保不正确的选择器会抛出异常
       // Ensure that invalid selectors throw exceptions at attach time
       // Evaluate against documentElement in case elem is a non-element node (e.g., document)
       if ( selector ) {
         jQuery.find.matchesSelector( documentElement, selector );
       }
 
+      //确保handler有唯一的id
       // Make sure that the handler has a unique ID, used to find/remove it later
       if ( !handler.guid ) {
         handler.guid = jQuery.guid++;
       }
-
+      //如果事件处理没有，则置为空对象
       // Init the element's event structure and main handler, if this is the first
+      //在这里，就应经给events赋值了，
+      // 注意这种写法:赋值的同时，判断
       if ( !( events = elemData.events ) ) {
         events = elemData.events = {};
       }
+
       if ( !( eventHandle = elemData.handle ) ) {
         eventHandle = elemData.handle = function( e ) {
 
+          //当在一个页面卸载后调用事件时，取消jQuery.event.trigger()的第二个事件
           // Discard the second event of a jQuery.event.trigger() and
           // when an event is called after a page has unloaded
+
+          //jQuery.event.triggered: undefined
+          //e.type: click/mouseout
           return typeof jQuery !== "undefined" && jQuery.event.triggered !== e.type ?
+            //让elem调用jQuery.event.dispatch方法，参数是arguments
             jQuery.event.dispatch.apply( elem, arguments ) : undefined;
         };
       }
-
+      //通过空格将多个events分开，一般为一个，如click
       // Handle multiple events separated by a space
       types = ( types || "" ).match( rnothtmlwhite ) || [ "" ];
       t = types.length;
       while ( t-- ) {
         tmp = rtypenamespace.exec( types[ t ] ) || [];
+        //click
         type = origType = tmp[ 1 ];
+        //""
         namespaces = ( tmp[ 2 ] || "" ).split( "." ).sort();
-
         // There *must* be a type, no attaching namespace-only handlers
         if ( !type ) {
           continue;
         }
-
+        //如果event改变了它自己的type，就使用特殊的event handlers
         // If event changes its type, use the special event handlers for the changed type
         special = jQuery.event.special[ type ] || {};
-
+        //如果选择器已定义，确定一个特殊event api的type
+        //否则使用默认type
         // If selector defined, determine special event api type, otherwise given type
         type = ( selector ? special.delegateType : special.bindType ) || type;
-
+        //不明白为什么在上面要先写一遍
         // Update special based on newly reset type
         special = jQuery.event.special[ type ] || {};
-
+        //handleObj会传递给所有的event handlers
         // handleObj is passed to all event handlers
         handleObj = jQuery.extend( {
           type: type,
@@ -5283,7 +5332,8 @@
           needsContext: selector && jQuery.expr.match.needsContext.test( selector ),
           namespace: namespaces.join( "." )
         }, handleObjIn );
-
+        
+        //第一次绑定事件，走这里
         // Init the event handler queue if we're the first
         if ( !( handlers = events[ type ] ) ) {
           handlers = events[ type ] = [];
@@ -5292,13 +5342,13 @@
           // Only use addEventListener if the special events handler returns false
           if ( !special.setup ||
             special.setup.call( elem, data, namespaces, eventHandle ) === false ) {
-
+            //目标元素有addEventListener的话，调用绑定click事件
             if ( elem.addEventListener ) {
               elem.addEventListener( type, eventHandle );
             }
           }
         }
-
+        //special的add/handleObj.handler.guidd的初始化处理
         if ( special.add ) {
           special.add.call( elem, handleObj );
 
@@ -5313,7 +5363,7 @@
         } else {
           handlers.push( handleObj );
         }
-
+        //一旦有绑定事件，全局通知
         // Keep track of which events have ever been used, for event optimization
         jQuery.event.global[ type ] = true;
       }
@@ -5400,6 +5450,8 @@
       }
     },
 
+
+    //下次讲 5.26
     dispatch: function( nativeEvent ) {
 
       // Make a writable jQuery.Event from the native event object
@@ -5585,15 +5637,16 @@
         delegateType: "focusout"
       },
       click: {
-
+        //如果是复选框，启用原生event，这样选中状态才能正确
         // For checkbox, fire native event so checked state will be right
         trigger: function() {
+          //如果input的type是checkbox并且有click事件的话
           if ( this.type === "checkbox" && this.click && nodeName( this, "input" ) ) {
             this.click();
             return false;
           }
         },
-
+        //为保证各个浏览器行为一致，不要在链接上执行click()方法
         // For cross-browser consistency, don't fire native .click() on links
         _default: function( event ) {
           return nodeName( event.target, "a" );
@@ -5812,14 +5865,19 @@
   //绑定事件的方法
   //源码5812行
   jQuery.fn.extend( {
+    //在被选元素及子元素上添加一个或多个事件处理程序
     //$().on('click',function()=<{})
+    //源码5817行
     on: function( types, selector, data, fn ) {
       return on( this, types, selector, data, fn );
     },
     //只执行一次
+    //源码5822行
     one: function( types, selector, data, fn ) {
       return on( this, types, selector, data, fn, 1 );
     },
+    //通常用于移除通过 on() 方法添加的事件处理程序
+    //源码5827行
     off: function( types, selector, fn ) {
       var handleObj, type;
       if ( types && types.preventDefault && types.handleObj ) {
@@ -10912,6 +10970,7 @@
 
   //这种写法还第一次见，将所有鼠标事件写成字符串再换成数组
   //再一一绑定到DOM节点上去
+  //源码10969行
   jQuery.each( ( "blur focus focusin focusout resize scroll click dblclick " +
     "mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave " +
     "change select submit keydown keypress keyup contextmenu" ).split( " " ),
@@ -10920,7 +10979,7 @@
       // Handle event binding
       jQuery.fn[ name ] = function( data, fn ) {
         return arguments.length > 0 ?
-          //如果有参数的话，就用原生js的on绑定
+          //如果有参数的话，就用jQuery的on绑定
           this.on( name, null, data, fn ) :
           //否则使用trigger
           this.trigger( name );
