@@ -62,6 +62,8 @@
   //======Object对象======
   var class2type = {};
   var toString = class2type.toString;
+  //判断对象里是否有目标属性，返回boolean
+  //源码65行
   var hasOwn = class2type.hasOwnProperty;
   //todo:方法转为字符串 obj.hasOwnProperty.toString
   var fnToString = hasOwn.toString;
@@ -69,7 +71,8 @@
   var ObjectFunctionString = fnToString.call( Object );
   //======
   var support = {};
-
+  //判断obj是否是function
+  //源码74行
   var isFunction = function isFunction( obj ) {
 
     // Support: Chrome <=57, Firefox <=52
@@ -81,7 +84,7 @@
     //typeof obj.nodeType !== "number" 在古老的浏览器中需要额外判断
     return typeof obj === "function" && typeof obj.nodeType !== "number";
   };
-
+  //源码86行
   //判断是否是windows对象
   var isWindow = function isWindow( obj ) {
     return obj != null && obj === obj.window;
@@ -128,18 +131,19 @@
     }
     doc.head.appendChild( script ).parentNode.removeChild( script );
   }
-
-
+  //返回obj的类型
+  //源码134行
   function toType( obj ) {
     if ( obj == null ) {
       return obj + "";
     }
-
+    //兼容处理
     // Support: Android <=2.3 only (functionish RegExp)
     return typeof obj === "object" || typeof obj === "function" ?
       class2type[ toString.call( obj ) ] || "object" :
       typeof obj;
   }
+
   /* global Symbol */
 // Defining this global in .eslintrc.json would create a danger of using the global
 // unguarded in another place, it seems safer to define global only for this module
@@ -434,22 +438,30 @@
         "" :
         ( text + "" ).replace( rtrim, "" );
     },
-
+    //用于将一个类似数组的对象转换为真正的数组对象
+    //注意：类数组对象具有许多数组的属性(例如length属性，[]数组访问运算符等)，
+    // 不过它毕竟不是数组，缺少从数组的原型对象上继承下来的内置方法(例如：pop()、reverse()等)。
+    //结果仅供内部使用
     // results is for internal usage only
+    //源码442行
     makeArray: function( arr, results ) {
       var ret = results || [];
 
       if ( arr != null ) {
+        //Object()等效于new Object()
+        //先将arr转为对象类型，因为js中的array是Object
         if ( isArrayLike( Object( arr ) ) ) {
+          //将second合并到first后面
           jQuery.merge( ret,
             typeof arr === "string" ?
               [ arr ] : arr
           );
         } else {
+          //ret.push(arr)
           push.call( ret, arr );
         }
       }
-
+      //返回array
       return ret;
     },
     //源码453行，查看元素在数组中的位置
@@ -550,14 +562,17 @@
     function( i, name ) {
       class2type[ "[object " + name + "]" ] = name.toLowerCase();
     } );
-
+  //判断是不是类数组
+  //源码561行
   function isArrayLike( obj ) {
 
     // Support: real iOS 8.2 only (not reproducible in simulator)
     // `in` check used to prevent JIT error (gh-2145)
     // hasOwn isn't used here due to false negatives
     // regarding Nodelist length in IE
+    //后两个是兼容性考虑的判断
     var length = !!obj && "length" in obj && obj.length,
+      //obj类型
       type = toType( obj );
 
     if ( isFunction( obj ) || isWindow( obj ) ) {
@@ -5608,8 +5623,8 @@
         new jQuery.Event( originalEvent );
     },
     // load/focus/blur/click/beforeunload/focusin/focusout/mouseenter/mouseleave/pointerenter/pointerleave
-    //未看
     //cleanData()里有用到
+    //源码5627行
     special: {
       load: {
 
@@ -5636,6 +5651,7 @@
         },
         delegateType: "focusout"
       },
+      //源码5654行
       click: {
         //如果是复选框，启用原生event，这样选中状态才能正确
         // For checkbox, fire native event so checked state will be right
@@ -5839,7 +5855,12 @@
     mouseleave: "mouseout",
     pointerenter: "pointerover",
     pointerleave: "pointerout"
-  }, function( orig, fix ) {
+  }, //index,item
+    function( orig, fix ) {
+    //0 mouseenter
+    //1 mouseleave
+    //2 pointerenter
+    //3 pointerleave
     jQuery.event.special[ orig ] = {
       delegateType: fix,
       bindType: fix,
@@ -8840,33 +8861,40 @@
 
   support.focusin = "onfocusin" in window;
 
-
+  //匹配focusinfocus或者focusoutblur
   var rfocusMorph = /^(?:focusinfocus|focusoutblur)$/,
+
     stopPropagationCallback = function( e ) {
       e.stopPropagation();
     };
 
   jQuery.extend( jQuery.event, {
-
+    //源码8850行
+    //type, data, this
     trigger: function( event, data, elem, onlyHandlers ) {
-
       var i, cur, tmp, bubbleType, ontype, handle, special, lastElement,
+        //冒泡路径数组
         eventPath = [ elem || document ],
+        //判断event是否有'type'属性，有则取event.type，没有则取event
         type = hasOwn.call( event, "type" ) ? event.type : event,
+        //同上
         namespaces = hasOwn.call( event, "namespace" ) ? event.namespace.split( "." ) : [];
 
+      //当前元素
       cur = lastElement = tmp = elem = elem || document;
-
+      //文本内容或者是注释则不触发事件
       // Don't do events on text and comment nodes
       if ( elem.nodeType === 3 || elem.nodeType === 8 ) {
         return;
       }
-
+      //由focus/blur转变到focusin/out，现在不触发focus/blur事件
       // focus/blur morphs to focusin/out; ensure we're not firing them right now
+
+      //rfocusMorph:focusin focus|focusout blur
       if ( rfocusMorph.test( type + jQuery.event.triggered ) ) {
         return;
       }
-
+      //可以不看
       if ( type.indexOf( "." ) > -1 ) {
 
         // Namespaced trigger; create a regexp to match event type in handle()
@@ -8874,58 +8902,84 @@
         type = namespaces.shift();
         namespaces.sort();
       }
+      //onclick,onfocus等等
       ontype = type.indexOf( ":" ) < 0 && "on" + type;
-
+      //event一般是字符串，所以一般是undefined
+      //新建jQuery.event
       // Caller can pass in a jQuery.Event object, Object, or just an event type string
       event = event[ jQuery.expando ] ?
         event :
         new jQuery.Event( type, typeof event === "object" && event );
 
       // Trigger bitmask: & 1 for native handlers; & 2 for jQuery (always true)
+      //onlyHandlers一般为undefined
+      //3
       event.isTrigger = onlyHandlers ? 2 : 3;
+      //""
       event.namespace = namespaces.join( "." );
+      console.log(event,'event8899')
+      //null
       event.rnamespace = event.namespace ?
         new RegExp( "(^|\\.)" + namespaces.join( "\\.(?:.*\\.|)" ) + "(\\.|$)" ) :
         null;
-
+      //清空event以防它被复用
       // Clean up the event in case it is being reused
       event.result = undefined;
+      //target属性为目标DOM元素
+      //我们一般取的e.target.value，也正是目标元素的值
       if ( !event.target ) {
         event.target = elem;
       }
-
+      //复制data并预先考虑event，创建handler集合
       // Clone any incoming data and prepend the event, creating the handler arg list
+
+      //简单点，就是 data=[event]
       data = data == null ?
         [ event ] :
         jQuery.makeArray( data, [ event ] );
 
+      //赋值有需要特殊处理的type
       // Allow special events to draw outside the lines
       special = jQuery.event.special[ type ] || {};
+
       if ( !onlyHandlers && special.trigger && special.trigger.apply( elem, data ) === false ) {
         return;
       }
 
+      //提前确定事件冒泡的路径
       // Determine event propagation path in advance, per W3C events spec (#9951)
+      //冒泡至document，再到window；关注全局的ownerDocument
       // Bubble up to document, then to window; watch for a global ownerDocument var (#9724)
       if ( !onlyHandlers && !special.noBubble && !isWindow( elem ) ) {
-
+        //click
         bubbleType = special.delegateType || type;
+
+        //clickclick
+        //如果不是focus/blur的话，获取它的父元素
         if ( !rfocusMorph.test( bubbleType + type ) ) {
           cur = cur.parentNode;
         }
+        //for循环的语法（a; b; c）
+        //a在单次循环开始前执行
+        //b是单次循环的条件（这里即cur存在）
+        //c是单次循环结束后执行
         for ( ; cur; cur = cur.parentNode ) {
+          //将目标元素的祖先元素都push进数组
           eventPath.push( cur );
           tmp = cur;
         }
-
+        //只有当tmp是document时，将window加上
         // Only add window if we got to document (e.g., not plain obj or detached DOM)
         if ( tmp === ( elem.ownerDocument || document ) ) {
           eventPath.push( tmp.defaultView || tmp.parentWindow || window );
         }
       }
 
+      //触发冒泡机制
       // Fire handlers on the event path
       i = 0;
+      //e.stopPropagation()这是阻止冒泡的方法
+      //isPropagationStopped() 检查是否阻止冒泡了，返回boolean
       while ( ( cur = eventPath[ i++ ] ) && !event.isPropagationStopped() ) {
         lastElement = cur;
         event.type = i > 1 ?
@@ -8933,50 +8987,57 @@
           special.bindType || type;
 
         // jQuery handler
+        //获取目标元素的触发事件
         handle = ( dataPriv.get( cur, "events" ) || {} )[ event.type ] &&
+          //获取触发事件的处理程序
           dataPriv.get( cur, "handle" );
+        //让当前元素执行handle
         if ( handle ) {
           handle.apply( cur, data );
         }
-
+        //原生的处理程序
+        //click为onclick
         // Native handler
         handle = ontype && cur[ ontype ];
+        //如果当前元素的原生事件的执行程序的结果为false，
+        //则阻止元素默认行为
         if ( handle && handle.apply && acceptData( cur ) ) {
           event.result = handle.apply( cur, data );
           if ( event.result === false ) {
+            //阻止元素的默认行为（如提交表单submit）
             event.preventDefault();
           }
         }
       }
+      
       event.type = type;
-
+      //如果没有人阻止默认行为的话，现在就阻止
       // If nobody prevented the default action, do it now
       if ( !onlyHandlers && !event.isDefaultPrevented() ) {
-
+      console.log(onlyHandlers,'onlyHandlers9017')
         if ( ( !special._default ||
           special._default.apply( eventPath.pop(), data ) === false ) &&
           acceptData( elem ) ) {
-
+          //在目标上，用重复的命名调用原生DOM事件，会在window层面上影响其他元素
           // Call a native DOM method on the target with the same name as the event.
           // Don't do default actions on window, that's where global variables be (#6170)
           if ( ontype && isFunction( elem[ type ] ) && !isWindow( elem ) ) {
-
+            //当我们触发FOO事件（如click）时，不要重复触发它的onFOO（onclick）事件
             // Don't re-trigger an onFOO event when we call its FOO() method
             tmp = elem[ ontype ];
-
+            //将jQuery对象的onclick属性置为null
             if ( tmp ) {
               elem[ ontype ] = null;
             }
-
+            //阻止重复触发同样的事件，因为我们已经把它冒泡了
             // Prevent re-triggering of the same event, since we already bubbled it above
             jQuery.event.triggered = type;
-
+            //如果已经执行阻止冒泡了，则为window添加阻止冒泡的监听
             if ( event.isPropagationStopped() ) {
               lastElement.addEventListener( type, stopPropagationCallback );
             }
-
+            //执行type事件
             elem[ type ]();
-
             if ( event.isPropagationStopped() ) {
               lastElement.removeEventListener( type, stopPropagationCallback );
             }
@@ -8986,10 +9047,11 @@
             if ( tmp ) {
               elem[ ontype ] = tmp;
             }
+
           }
         }
       }
-
+      console.log(event.result,'event9054')
       return event.result;
     },
 
@@ -9011,12 +9073,17 @@
   } );
 
   jQuery.fn.extend( {
-
+    //触发type事件，data是自定义事件的额外参数
+    //源码9014行
     trigger: function( type, data ) {
+      console.log(this.each( function() {
+        jQuery.event.trigger( type, data, this );
+      }),'type9081')
       return this.each( function() {
         jQuery.event.trigger( type, data, this );
       } );
     },
+
     triggerHandler: function( type, data ) {
       var elem = this[ 0 ];
       if ( elem ) {
