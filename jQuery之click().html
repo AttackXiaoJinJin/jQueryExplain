@@ -7,27 +7,35 @@
 
 <body>
 <script src="jQuery.js"></script>
-<div id="one">这是one</div>
+<a id="one" href="https://www.baidu.com">这是one</a>
 <script>
 
-  // $("#one").click(function(){
-  //   console.log('one被点击了')
+    $("#one").click()
+
+
+    // document.getElementById("one").onclick=function(){
+    //   console.log('onclick被点击了')
+    // }
+
+  // $("body").click(function(){
+  //   console.log('body被点击了')
   // })
 
 
 
- $("#one").on("click",function () {
-   console.log("one被点击了")
- })
-  let i=0
-  document.getElementById("one").onclick=function(){
-    console.log(i++,'two被点击了')
-  }
+ // $("#one").on("click",function () {
+ //   console.log("one被点击了")
+ // })
+ //
+ //  $("#one").trigger('click')
+  // $("#one").trigger('click')
+ //
+
 
 
  // $("#one").trigger('click')
  // $("#one").trigger('click')
-  console.log($("#one").trigger('click'),'click30')
+ //  console.log($("#one").trigger('click'),'click30')
 
 
   //
@@ -36,7 +44,9 @@
  //random 小数点后16位
  //  console.log(Math.random(),'random21')
 
-
+// let a=[1,2,3]
+//   a.push(4||5||6)
+//   console.log(a,'a44')
 
 
 </script>

@@ -4285,6 +4285,7 @@
       }
       return cache;
     },
+    //cur, "handle"
     get: function( owner, key ) {
       return key === undefined ?
         this.cache( owner ) :
@@ -5691,7 +5692,7 @@
       elem.removeEventListener( type, handle );
     }
   };
-
+  //click，false
   jQuery.Event = function( src, props ) {
 
     // Allow instantiation without the 'new' keyword
@@ -5726,10 +5727,12 @@
 
       // Event type
     } else {
+      //click
       this.type = src;
     }
 
     // Put explicitly provided properties onto the event object
+    //false
     if ( props ) {
       jQuery.extend( this, props );
     }
@@ -5743,6 +5746,8 @@
 
 // jQuery.Event is based on DOM3 Events as specified by the ECMAScript Language Binding
 // https://www.w3.org/TR/2003/WD-DOM-Level-3-Events-20030331/ecma-script-binding.html
+  //event的属性赋值
+  //源码5749行
   jQuery.Event.prototype = {
     constructor: jQuery.Event,
     isDefaultPrevented: returnFalse,
@@ -5759,11 +5764,13 @@
         e.preventDefault();
       }
     },
+    //当执行e.stopPropagation()后走这边
+    //源码5767行
     stopPropagation: function() {
       var e = this.originalEvent;
-
+      //isPropagationStopped方法返回true
       this.isPropagationStopped = returnTrue;
-
+      console.log(this,'this5773')
       if ( e && !this.isSimulated ) {
         e.stopPropagation();
       }
@@ -8862,6 +8869,7 @@
   support.focusin = "onfocusin" in window;
 
   //匹配focusinfocus或者focusoutblur
+  //源码8872行
   var rfocusMorph = /^(?:focusinfocus|focusoutblur)$/,
 
     stopPropagationCallback = function( e ) {
@@ -8905,10 +8913,11 @@
       //onclick,onfocus等等
       ontype = type.indexOf( ":" ) < 0 && "on" + type;
       //event一般是字符串，所以一般是undefined
-      //新建jQuery.event
+      //获取对应type类型的jQuery.event
       // Caller can pass in a jQuery.Event object, Object, or just an event type string
       event = event[ jQuery.expando ] ?
         event :
+        //click,false
         new jQuery.Event( type, typeof event === "object" && event );
 
       // Trigger bitmask: & 1 for native handlers; & 2 for jQuery (always true)
@@ -8917,7 +8926,6 @@
       event.isTrigger = onlyHandlers ? 2 : 3;
       //""
       event.namespace = namespaces.join( "." );
-      console.log(event,'event8899')
       //null
       event.rnamespace = event.namespace ?
         new RegExp( "(^|\\.)" + namespaces.join( "\\.(?:.*\\.|)" ) + "(\\.|$)" ) :
@@ -8964,6 +8972,7 @@
         //b是单次循环的条件（这里即cur存在）
         //c是单次循环结束后执行
         for ( ; cur; cur = cur.parentNode ) {
+          console.log(cur,'cur8967')
           //将目标元素的祖先元素都push进数组
           eventPath.push( cur );
           tmp = cur;
@@ -8974,7 +8983,6 @@
           eventPath.push( tmp.defaultView || tmp.parentWindow || window );
         }
       }
-
       //触发冒泡机制
       // Fire handlers on the event path
       i = 0;
@@ -8985,23 +8993,29 @@
         event.type = i > 1 ?
           bubbleType :
           special.bindType || type;
-
+        console.log(i,'lastElement8987')
         // jQuery handler
-        //获取目标元素的触发事件
+        //( dataPriv.get( cur, "events" ) || {} )[ event.type ]
+        // 先判断cur元素的events是否有绑定click
+        //dataPriv.get( cur, "handle" ) 
+        //再获取cur元素的click事件处理程序
+        //获取目标元素的触发事件的事件处理程序
         handle = ( dataPriv.get( cur, "events" ) || {} )[ event.type ] &&
           //获取触发事件的处理程序
           dataPriv.get( cur, "handle" );
-        //让当前元素执行handle
+        /*让冒泡元素执行handle,这行代码是触发冒泡机制的关键*/
+        /*在执行click事件的处理程序后，自然就会执行e.stopPropagation()，
+        * 从而让event.isPropagationStopped()=true*/
         if ( handle ) {
           handle.apply( cur, data );
         }
-        //原生的处理程序
+        //接下来处理原生的事件及处理程序
         //click为onclick
         // Native handler
         handle = ontype && cur[ ontype ];
-        //如果当前元素的原生事件的执行程序的结果为false，
-        //则阻止元素默认行为
+        //如果有绑定原生onclick事件的话
         if ( handle && handle.apply && acceptData( cur ) ) {
+          //执行onclick事件的处理程序
           event.result = handle.apply( cur, data );
           if ( event.result === false ) {
             //阻止元素的默认行为（如提交表单submit）
@@ -9012,9 +9026,9 @@
       
       event.type = type;
       //如果没有人阻止默认行为的话，现在就阻止
+      /*比如触发<a>的click事件，但不会跳转*/
       // If nobody prevented the default action, do it now
       if ( !onlyHandlers && !event.isDefaultPrevented() ) {
-      console.log(onlyHandlers,'onlyHandlers9017')
         if ( ( !special._default ||
           special._default.apply( eventPath.pop(), data ) === false ) &&
           acceptData( elem ) ) {
@@ -9026,6 +9040,7 @@
             // Don't re-trigger an onFOO event when we call its FOO() method
             tmp = elem[ ontype ];
             //将jQuery对象的onclick属性置为null
+            //比如<a>就不会去跳转了
             if ( tmp ) {
               elem[ ontype ] = null;
             }
@@ -9036,6 +9051,7 @@
             if ( event.isPropagationStopped() ) {
               lastElement.addEventListener( type, stopPropagationCallback );
             }
+            console.log(elem[ type ],'type9053')
             //执行type事件
             elem[ type ]();
             if ( event.isPropagationStopped() ) {
@@ -9051,7 +9067,6 @@
           }
         }
       }
-      console.log(event.result,'event9054')
       return event.result;
     },
 
@@ -9076,9 +9091,6 @@
     //触发type事件，data是自定义事件的额外参数
     //源码9014行
     trigger: function( type, data ) {
-      console.log(this.each( function() {
-        jQuery.event.trigger( type, data, this );
-      }),'type9081')
       return this.each( function() {
         jQuery.event.trigger( type, data, this );
       } );
