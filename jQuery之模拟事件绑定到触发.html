@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery之模拟事件绑定到触发</title>
+</head>
+<body>
+<p>模拟jQuery的整个事件流程绑定到执行</p>
+<p>1. 通过on绑定</p>
+<p>2. 通过dispatch派发</p>
+<p>3. 通过fix修正事件对象</p>
+<div id="chen">干我</div>
+
+<script src="jQuery.js"></script>
+<script>
+  function returnTrue() {
+    return true;
+  }
+
+  function returnFalse() {
+    return false;
+  }
+
+  //模拟jQuery的dataCache
+  let eventCache = {};
+  let mockjQuery={}
+  //mockjQuery>fn
+  //mockjQuery>prototype
+  mockjQuery.fn = mockjQuery.prototype = {
+    name: 'chen',
+    init: function(selector) {
+      //this指mockjQuery对象
+      this.selector = selector;
+      this[0] = document.querySelectorAll(selector)[0]
+      //返回的就是带有selector和[0]属性的mockjQuery对象
+      return this;
+    },
+    constructor: mockjQuery
+  }
+  //mockjQuery>fn>init>prototype
+  mockjQuery.fn.init.prototype = mockjQuery.fn
+ //mockjQuery>event
+  mockjQuery.event = {
+    //绑定事件
+    add:function(elem, types, handler){
+      let eventHandle = function(e) {
+        //让elem派发事件
+        //arguments即dispatch的event参数
+        return mockjQuery.event.dispatch.apply(elem, arguments)
+      };
+      //通过eventCache，保存用户的回调函数
+      eventCache['handler'] = handler
+      //如果目标元素存在addEventListener方法的话
+      //就执行它
+      if (elem.addEventListener) {
+        elem.addEventListener(types, eventHandle, false);
+      }
+    },
+
+    //派发事件
+    dispatch:function(event){
+      //修正事件对象
+      event = mockjQuery.event.fix(event)
+      //触发目标元素的回调函数
+      eventCache['handler'].call(this,event)
+    },
+
+    //执行事件句柄
+    handlers: function(event, handlers) {
+      let handlerQueue = [];
+      handlerQueue.push({
+        elem: this,
+        handlers: handlers.slice(delegateCount)
+      });
+    },
+
+    //修正事件对象
+    fix:function(event){
+      //原始事件引用
+      let originalEvent = event;
+      //鼠标事件对象的属性
+      let props= "altKey bubbles cancelable ctrlKey currentTarget eventPhase metaKey relatedTarget shiftKey target timeStamp view which button buttons clientX clientY offsetX offsetY pageX pageY screenX screenY toElement".split(" ");
+
+      //创建事件对象
+      let newevent = new ajQuery.Event(originalEvent);
+
+      //混入事件属性
+      let i = props.length;
+      while (i--) {
+        let prop = props[i];
+        newevent[prop] = originalEvent[prop];
+      }
+      return event
+    },
+  }
+
+  //模拟出事件对象
+  //增加调用判断方法
+  mockjQuery.Event = function(src, props) {
+    if (src && src.type) {
+      this.originalEvent = src;
+      this.type = src.type;
+      this.isDefaultPrevented = src.defaultPrevented ||
+                                src.defaultPrevented === undefined &&
+                                src.returnValue === false ? returnTrue : returnFalse;
+    } else {
+      this.type = src;
+    }
+    //记录时间戳
+    this.timeStamp = src && src.timeStamp || jQuery.now();
+    this[jQuery.expando] = true;
+  };
+
+  mockjQuery.Event.prototype = {
+    isDefaultPrevented: returnFalse,
+    isPropagationStopped: returnFalse,
+    isImmediatePropagationStopped: returnFalse,
+    preventDefault: function() {
+      let e = this.originalEvent;
+      this.isDefaultPrevented = returnTrue;
+      if (e && e.preventDefault) {
+        e.preventDefault();
+      }
+    },
+    stopPropagation: function() {
+      let e = this.originalEvent;
+      this.isPropagationStopped = returnTrue;
+      if (e && e.stopPropagation) {
+        e.stopPropagation();
+      }
+    },
+    stopImmediatePropagation: function() {
+      let e = this.originalEvent;
+      this.isImmediatePropagationStopped = returnTrue;
+
+      if (e && e.stopImmediatePropagation) {
+        e.stopImmediatePropagation();
+      }
+      this.stopPropagation();
+    }
+  };
+
+
+  mockjQuery.fn.on = function(types, fn) {
+    //参数过滤
+    //xxx
+    //xxx
+    mockjQuery.event.add(this[0], types, fn);
+  }
+
+
+  let mock$  = function(selector) {
+    return new mockjQuery.fn.init(selector);
+  }
+
+
+  mock$('#chen').on('click',function(){
+    console.log("我会再变得柔软一点点，因为你太敏感。")
+  })
+
+
+</script>
+
+</body>
+</html>
