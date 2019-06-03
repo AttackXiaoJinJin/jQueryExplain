@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>addEvent.js</title>
+</head>
+<body>
+<div id="one">干我</div>
+<script>
+  //addEvent即为DOM元素绑定事件
+
+  // a counter used to create unique IDs
+  //为每一个事件添加唯一的id
+  addEvent.guid = 1;
+
+  function addEvent(element, type, handler) {
+    // assign each event handler a unique ID
+    //如果用户自定义的回调函数没有$$guid的话，
+    //为每个handler添加唯一的id
+    if (!handler.$$guid) handler.$$guid = addEvent.guid++;
+    // create a hash table of event types for the element
+    //为目标元素添加events属性
+    if (!element.events) element.events = {};
+    // create a hash table of event handlers for each element/event pair
+    //events是目标元素绑定的事件的集合
+    //第一次使用addEvent绑定往往是undefined
+    var handlers = element.events[type];
+    if (!handlers) {
+      handlers = element.events[type] = {};
+      // store the existing event handler (if there is one)
+      //handlers的0属性作为目标元素的原生绑定事件
+      if (element["on" + type]) {
+        handlers[0] = element["on" + type];
+      }
+    }
+    // store the event handler in the hash table
+    //将每次绑定的事件保存到handler的id属性中
+    handlers[handler.$$guid] = handler;
+    // assign a global event handler to do all the work
+    //为目标元素的原生事件绑定处理程序（handleEvent）
+    element["on" + type] = handleEvent;
+  }
+
+
+
+  function removeEvent(element, type, handler) {
+    // delete the event handler from the hash table
+    if (element.events && element.events[type]) {
+      delete element.events[type][handler.$$guid];
+    }
+  }
+  //执行事件的处理程序
+  function handleEvent(event) {
+    // grab the event object (IE uses a global event object)
+    console.log(event,'event55')
+    event = event || window.event;
+    // get a reference to the hash table of event handlers
+    //找到相同事件的处理程序
+    var handlers = this.events[event.type];
+    // execute each event handler
+    //依次执行事件的处理程序
+    for (var i in handlers) {
+      this.$$handleEvent = handlers[i];
+      this.$$handleEvent(event);
+    }
+  }
+  
+  let one=document.querySelector("#one")
+  addEvent(one,'click',function () {
+    console.log('点击了one')
+  })
+
+
+</script>
+</body>
+</html>
