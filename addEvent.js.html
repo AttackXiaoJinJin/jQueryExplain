@@ -5,7 +5,10 @@
   <title>addEvent.js</title>
 </head>
 <body>
-<div id="one">干我</div>
+<div id="outerone">
+  <div id="one">干我</div>
+</div>
+
 <script>
   //addEvent即为DOM元素绑定事件
 
@@ -24,7 +27,7 @@
     // create a hash table of event handlers for each element/event pair
     //events是目标元素绑定的事件的集合
     //第一次使用addEvent绑定往往是undefined
-    var handlers = element.events[type];
+    let handlers = element.events[type];
     if (!handlers) {
       handlers = element.events[type] = {};
       // store the existing event handler (if there is one)
@@ -36,39 +39,71 @@
     // store the event handler in the hash table
     //将每次绑定的事件保存到handler的id属性中
     handlers[handler.$$guid] = handler;
+
     // assign a global event handler to do all the work
     //为目标元素的原生事件绑定处理程序（handleEvent）
     element["on" + type] = handleEvent;
   }
 
 
-
+  //移除监听事件
   function removeEvent(element, type, handler) {
     // delete the event handler from the hash table
+    console.log(handler,'handler52')
     if (element.events && element.events[type]) {
       delete element.events[type][handler.$$guid];
     }
   }
+
   //执行事件的处理程序
   function handleEvent(event) {
     // grab the event object (IE uses a global event object)
-    console.log(event,'event55')
+    // console.log(event,'event55')
+    //event即MouseEvent,原生的鼠标事件集合
     event = event || window.event;
     // get a reference to the hash table of event handlers
     //找到相同事件的处理程序
-    var handlers = this.events[event.type];
+    //注意这个this，指的是目标元素
+    //找到handlers集合
+    let handlers = this.events[event.type];
     // execute each event handler
+
     //依次执行事件的处理程序
-    for (var i in handlers) {
+    for (let i in handlers) {
       this.$$handleEvent = handlers[i];
       this.$$handleEvent(event);
     }
   }
+
+  // function handleEvent(event) {
+  //   event = event || window.event;
+  //   for (let i in this.events[event.type]) {
+  //     console.log(this,'this80')
+  //     this.events[event.type][i](event)
+  //   }
+  // }
+
   
   let one=document.querySelector("#one")
+
   addEvent(one,'click',function () {
     console.log('点击了one')
   })
+  // removeEvent(one,'click',function () {
+  //   console.log('点击了one')
+  // })
+
+
+  // one.onclick=function (e) {
+  //   console.log('原生点击了one')
+  // }
+
+
+
+
+
+
+
 
 
 </script>

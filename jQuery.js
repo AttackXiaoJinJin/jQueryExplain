@@ -5250,11 +5250,11 @@
 
 
   //源码5235行
-  /*
- * Helper functions for managing events -- not part of the public interface.
- * Props to Dean Edwards' addEvent library for many of the ideas.
- */
-  jQuery.event = {
+    /*
+   * Helper functions for managing events -- not part of the public interface.
+   * Props to Dean Edwards' addEvent library for many of the ideas.
+   */
+    jQuery.event = {
 
     global: {},
     //源码5241行
