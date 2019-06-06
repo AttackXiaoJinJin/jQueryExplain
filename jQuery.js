@@ -5297,10 +5297,10 @@
       if ( !( events = elemData.events ) ) {
         events = elemData.events = {};
       }
-
+      //eventHandle
       if ( !( eventHandle = elemData.handle ) ) {
-        eventHandle = elemData.handle = function( e ) {
 
+        eventHandle = elemData.handle = function( e ) {
           //当在一个页面卸载后调用事件时，取消jQuery.event.trigger()的第二个事件
           // Discard the second event of a jQuery.event.trigger() and
           // when an event is called after a page has unloaded
@@ -5309,9 +5309,14 @@
           //e.type: click/mouseout
           return typeof jQuery !== "undefined" && jQuery.event.triggered !== e.type ?
             //让elem调用jQuery.event.dispatch方法，参数是arguments
+            //只传了目标元素和MouseEvent对象,但是没有传事件处理程序handler，
+            //那么如何执行handler？
             jQuery.event.dispatch.apply( elem, arguments ) : undefined;
         };
+
       }
+
+
       //通过空格将多个events分开，一般为一个，如click
       // Handle multiple events separated by a space
       types = ( types || "" ).match( rnothtmlwhite ) || [ "" ];
@@ -5354,11 +5359,12 @@
         if ( !( handlers = events[ type ] ) ) {
           handlers = events[ type ] = [];
           handlers.delegateCount = 0;
-
           // Only use addEventListener if the special events handler returns false
           if ( !special.setup ||
             special.setup.call( elem, data, namespaces, eventHandle ) === false ) {
             //目标元素有addEventListener的话，调用绑定click事件
+
+            //eventHandle就绑定到addEventListener上
             if ( elem.addEventListener ) {
               elem.addEventListener( type, eventHandle );
             }
@@ -5467,15 +5473,29 @@
     },
 
 
-    //下次讲 5.26
-    dispatch: function( nativeEvent ) {
+    //源码5472行
+    //nativeEvent即原生MouseEvent
 
+    dispatch: function( nativeEvent ) {
+      //修正event对象
       // Make a writable jQuery.Event from the native event object
       var event = jQuery.event.fix( nativeEvent );
-
+      console.log(event,'event5479')
+      
       var i, j, ret, matched, handleObj, handlerQueue,
         args = new Array( arguments.length ),
+        //获取click事件的处理程序集合，结构如下：
+        //[
+        // {type: "click", origType: "click", data: undefined, handler: ƒ, guid: 1},
+        // {type: "click", origType: "click", data: undefined, handler: ƒ, guid: 2},
+        // delegateCount:0,
+        //]
+        //从数据缓存中获取事件处理集合
         handlers = ( dataPriv.get( this, "events" ) || {} )[ event.type ] || [],
+        //click:{
+        // trigger:{},
+        // _default:{}
+        //}
         special = jQuery.event.special[ event.type ] || {};
 
       // Use the fix-ed jQuery.Event rather than the (read-only) native event
@@ -5484,39 +5504,57 @@
       for ( i = 1; i < arguments.length; i++ ) {
         args[ i ] = arguments[ i ];
       }
-
+      //this即目标元素
+      //delegateTarget:委托目标
       event.delegateTarget = this;
-
+      //这段代码压根不会执行，因为全局搜索没找到preDispatch
       // Call the preDispatch hook for the mapped type, and let it bail if desired
       if ( special.preDispatch && special.preDispatch.call( this, event ) === false ) {
         return;
       }
-
       // Determine handlers
+      //结构如下
+      //[{
+      // elem:xx,
+      // handlers:[
+      //  {type: "click", origType: "click", data: undefined, handler: ƒ, guid: 1},
+      //  {type: "click", origType: "click", data: undefined, handler: ƒ, guid: 2},
+      //  ]
+      //}]
+      //获取handler队列
       handlerQueue = jQuery.event.handlers.call( this, event, handlers );
-
       // Run delegates first; they may want to stop propagation beneath us
       i = 0;
+      //没有执行stopPropagation()的话
+      console.log(handlerQueue,'handlerQueue5525')
+      //先判断有没有冒泡
+      //再判断有没有阻止剩下的handler执行
       while ( ( matched = handlerQueue[ i++ ] ) && !event.isPropagationStopped() ) {
         event.currentTarget = matched.elem;
 
         j = 0;
+        //handleObj即单个事件处理程序
+        //没有执行stopImmediatePropagation()的话
+
+        //依次执行每一个handler
         while ( ( handleObj = matched.handlers[ j++ ] ) &&
         !event.isImmediatePropagationStopped() ) {
 
           // Triggered event must either 1) have no namespace, or 2) have namespace(s)
           // a subset or equal to those in the bound event (both can have no namespace).
           if ( !event.rnamespace || event.rnamespace.test( handleObj.namespace ) ) {
-
+            //通过循环将为event添加handleObj和handleObj.data
             event.handleObj = handleObj;
             event.data = handleObj.data;
-
+            //关键代码，执行事件处理程序handler
             ret = ( ( jQuery.event.special[ handleObj.origType ] || {} ).handle ||
               handleObj.handler ).apply( matched.elem, args );
-
             if ( ret !== undefined ) {
+              //event.result赋值ret
               if ( ( event.result = ret ) === false ) {
+                //阻止默认行为
                 event.preventDefault();
+                //阻止冒泡
                 event.stopPropagation();
               }
             }
@@ -5528,16 +5566,20 @@
       if ( special.postDispatch ) {
         special.postDispatch.call( this, event );
       }
-
+      //undefined
       return event.result;
     },
-
+      
+      
+    //源码5547行
+    //组装事件处理队列  
     handlers: function( event, handlers ) {
       var i, handleObj, sel, matchedHandlers, matchedSelectors,
         handlerQueue = [],
+        //0
         delegateCount = handlers.delegateCount,
+        //目标元素
         cur = event.target;
-
       // Find delegate handlers
       if ( delegateCount &&
 
@@ -5551,7 +5593,6 @@
         // Support: IE 11 only
         // ...but not arrow key "clicks" of radio inputs, which can have `button` -1 (gh-2343)
         !( event.type === "click" && event.button >= 1 ) ) {
-
         for ( ; cur !== this; cur = cur.parentNode || this ) {
 
           // Don't check non-elements (#13208)
@@ -5571,6 +5612,7 @@
                   jQuery.find( sel, this, null, [ cur ] ).length;
               }
               if ( matchedSelectors[ sel ] ) {
+                console.log(sel,matchedSelectors[ sel ],'sel5615')
                 matchedHandlers.push( handleObj );
               }
             }
@@ -5583,10 +5625,17 @@
 
       // Add the remaining (directly-bound) handlers
       cur = this;
+      //0<2
       if ( delegateCount < handlers.length ) {
         handlerQueue.push( { elem: cur, handlers: handlers.slice( delegateCount ) } );
       }
-
+      //[{
+      // elem:xx,
+      // handlers:[
+      //  {type: "click", origType: "click", data: undefined, handler: ƒ, guid: 1},
+      //  {type: "click", origType: "click", data: undefined, handler: ƒ, guid: 2},
+      //  ]
+      //}]
       return handlerQueue;
     },
 
@@ -5619,6 +5668,7 @@
     },
 
     fix: function( originalEvent ) {
+      //如果存在属性id则原样返回（因为已处理成jQueryEvent）
       return originalEvent[ jQuery.expando ] ?
         originalEvent :
         new jQuery.Event( originalEvent );
@@ -5741,6 +5791,7 @@
     this.timeStamp = src && src.timeStamp || Date.now();
 
     // Mark it as fixed
+    //修正的标志
     this[ jQuery.expando ] = true;
   };
 

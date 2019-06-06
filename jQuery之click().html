@@ -7,7 +7,10 @@
 
 <body>
 <script src="jQuery.js"></script>
-<a id="one" href="https://www.baidu.com">这是one</a>
+<!--<a id="one" href="https://www.baidu.com">这是one</a>-->
+<a id="one" style="border:1px blue solid">这是one
+  <div id="three" style="border:1px red solid">这是three</div>
+</a>
 <script>
 
     // $("#one").click()
@@ -19,15 +22,29 @@
   //   console.log('body被点击了')
   // })
 
+    // let one=document.getElementById("one")
+    // let three=document.getElementById("three")
 
+    // one.onclick=function(){
+    //   console.log('onclick被点击了')
+    // }
 
- $("#one").on("click",function () {
+    //在父元素上绑定click事件，但只能由子元素触发，父元素不触发
+ // $("#one").on("click",'#three' ,function () {
+ //   console.log("one被点击了")
+ // })
+ // $("#one").on("click",function () {
+ //   console.log("two被点击了")
+ // })
+
+ $("#one").on("click.one",'#three',function () {
    console.log("one被点击了")
  })
+ $("#one").on("click.two",function () {
+   console.log("two被点击了")
+ })
 
-    document.getElementById("one").onclick=function(){
-      console.log('onclick被点击了')
-    }
+// $("#one").off("click.one")
 
  //  $("#one").trigger('click')
   // $("#one").trigger('click')
@@ -39,22 +56,14 @@
  // $("#one").trigger('click')
  //  console.log($("#one").trigger('click'),'click30')
 
-
-  //
- // console.log($("#one"),'one20')
-
- //random 小数点后16位
- //  console.log(Math.random(),'random21')
-
-// let a=[1,2,3]
-//   a.push(4||5||6)
-//   console.log(a,'a44')
-
-  // let a={}
-  // let b=a
-  // b[0]='111'
-  //
-  // console.log(a,'a55') //{0:'111'}
+// let a=function () {
+//   console.log('aaaa')
+//   return null
+//   //return undefiend
+// }
+//
+// let b=22||a()
+//   console.log(b,'bbb51')
 
 </script>
 </body>
