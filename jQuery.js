@@ -5493,7 +5493,7 @@
 
     //源码5472行
     //nativeEvent即原生MouseEvent
-
+    //触发事件的处理程序
     dispatch: function( nativeEvent ) {
       //修正event对象
       // Make a writable jQuery.Event from the native event object
@@ -5517,7 +5517,7 @@
         special = jQuery.event.special[ event.type ] || {};
       // Use the fix-ed jQuery.Event rather than the (read-only) native event
       args[ 0 ] = event;
-
+      console.log(dataPriv.get( this, "events" ),'dataPriv5520')
       for ( i = 1; i < arguments.length; i++ ) {
         args[ i ] = arguments[ i ];
       }
@@ -5584,6 +5584,7 @@
       if ( special.postDispatch ) {
         special.postDispatch.call( this, event );
       }
+      console.log(handlers,'event5587')
       //undefined
       return event.result;
     },
@@ -5600,7 +5601,6 @@
         //目标元素
         cur = event.target;
       //handlers，第一个handler是委托事件，第二个handler是自身事件
-      console.log(cur,handlers,this,'cur5594')
       // Find delegate handlers
       if ( delegateCount &&
 
@@ -5614,15 +5614,18 @@
         // Support: IE 11 only
         // ...but not arrow key "clicks" of radio inputs, which can have `button` -1 (gh-2343)
         !( event.type === "click" && event.button >= 1 ) ) {
+        //循环，event.target冒泡到cur.parentNode，
+        //直至绑定的目标元素#A，退出循环
         for ( ; cur !== this; cur = cur.parentNode || this ) {
           console.log(cur,'cur5618')
           // Don't check non-elements (#13208)
           // Don't process clicks on disabled elements (#6911, #8165, #11382, #11764)
           if ( cur.nodeType === 1 && !( event.type === "click" && cur.disabled === true ) ) {
-            console.log(cur,'cur5622')
 
             matchedHandlers = [];
             matchedSelectors = {};
+            //在每一层，依次将委托的事件push进matchedHandlers
+            //顺序由下到上
             for ( i = 0; i < delegateCount; i++ ) {
               handleObj = handlers[ i ];
               //sel就是#C
@@ -5636,14 +5639,13 @@
                   //注意：jQuery.find()和jQuery().find()是不一样的
                   jQuery.find( sel, this, null, [ cur ] ).length;
               }
-              console.log(matchedSelectors,handleObj,jQuery.find( sel, this, null, [ cur ] ),'matchedSelectors5637')
               if ( matchedSelectors[ sel ] ) {
                 matchedHandlers.push( handleObj );
               }
             }
-            console.log(matchedHandlers,sel,'matchedHandlers5641')
+            //然后将该层委托事件的数组放进handlers中
+            //handlerQueue是所有层委托事件的集合
             if ( matchedHandlers.length ) {
-              console.log(cur,matchedHandlers,'cur5630')
               handlerQueue.push( { elem: cur, handlers: matchedHandlers } );
             }
           }
@@ -5651,14 +5653,13 @@
       }
 
       // Add the remaining (directly-bound) handlers
+      //最终冒泡到this元素
       cur = this;
       //1<2
       //将除委托事件的事件（如自身绑定的事件）放入handlerQueue中
       if ( delegateCount < handlers.length ) {
-        console.log(cur,handlers.slice( delegateCount ),'cur5642')
         handlerQueue.push( { elem: cur, handlers: handlers.slice( delegateCount ) } );
       }
-      console.log(handlerQueue,'handlerQueue5655')
       //[{
       // elem:xx,
       // handlers:[
@@ -5696,7 +5697,7 @@
         }
       } );
     },
-
+    //源码5700行
     fix: function( originalEvent ) {
       //如果存在属性id则原样返回（因为已处理成jQueryEvent）
       return originalEvent[ jQuery.expando ] ?
@@ -5773,16 +5774,22 @@
     }
   };
   //click，false
+  //修正event对象
+  //源码5777行
+  //src即MouseEvent
   jQuery.Event = function( src, props ) {
-
+    //允许不用new关键词实例化
     // Allow instantiation without the 'new' keyword
     if ( !( this instanceof jQuery.Event ) ) {
       return new jQuery.Event( src, props );
     }
 
     // Event object
+    //src.type=click
     if ( src && src.type ) {
+      //MouseEvent
       this.originalEvent = src;
+      //click
       this.type = src.type;
 
       // Events bubbling up the document may have been marked as prevented
@@ -5831,7 +5838,7 @@
   //源码5749行
   jQuery.Event.prototype = {
     constructor: jQuery.Event,
-    isDefaultPrevented: returnFalse,
+      isDefaultPrevented: returnFalse,
     isPropagationStopped: returnFalse,
     isImmediatePropagationStopped: returnFalse,
     isSimulated: false,
@@ -5868,7 +5875,8 @@
       this.stopPropagation();
     }
   };
-
+//源码5878行
+// 常用的事件属性包括键盘事件和鼠标事件
 // Includes all common event props including KeyEvent and MouseEvent specific props
   jQuery.each( {
     altKey: true,

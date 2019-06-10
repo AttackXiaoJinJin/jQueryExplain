@@ -35,12 +35,15 @@
   $("#A").on("click" ,function (event) {
     console.log(event,"A被点击了")
   })
+  $("#A").on("focus" ,function (event) {
+    console.log(event,"A被focus了")
+  })
 
   // $("#A").on("click" ,"#E",function (event) {
   $("#A").on("click" ,"#C",function (event) {
-    // event.stopPropagation()
-    // console.log(event,"点击了E，即E委托A的click事件被点击了")
-    console.log(event,"点击了C，即C委托A的click事件被点击了")
+  //   // event.stopPropagation()
+  //   // console.log(event,"点击了E，即E委托A的click事件被点击了")
+  //   console.log(event,"点击了C，即C委托A的click事件被点击了")
   })
 
   // console.log($("#B").find('#C'),'find46');
