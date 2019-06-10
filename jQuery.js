@@ -1416,7 +1416,7 @@
           docElem.mozMatchesSelector ||
           docElem.oMatchesSelector ||
           docElem.msMatchesSelector) )) ) {
-
+          console.log(docElem,'docElem1419')
           assert(function( el ) {
             // Check to see if it's possible to do matchesSelector
             // on a disconnected node (IE 9)
@@ -1583,9 +1583,10 @@
           ( !rbuggyMatches || !rbuggyMatches.test( expr ) ) &&
           ( !rbuggyQSA     || !rbuggyQSA.test( expr ) ) ) {
 
+
           try {
             var ret = matches.call( elem, expr );
-
+            console.log(ret,elem, expr,'elem1598')
             // IE 9's matchesSelector returns false on disconnected nodes
             if ( ret || support.disconnectedMatch ||
               // As well, disconnected nodes are said to be in a document
@@ -5175,6 +5176,8 @@
     var origFn, type;
     //这边可以不看
     // Types can be a map of types/handlers
+    
+    console.log(elem, types, selector, data, fn, one,'elem5179')
     if ( typeof types === "object" ) {
 
       // ( types-Object, selector, data )
@@ -5243,6 +5246,8 @@
 
     return elem.each( function() {
       //最终调动$.event.add方法
+      //#A,'click',function(){console.log('A被点击了')},undefined,undefined
+      //#A,'click',function(){点击了C，即C委托A的click事件被点击了},undefined,#C
       jQuery.event.add( this, types, fn, data, selector );
 
     } );
@@ -5259,8 +5264,12 @@
     global: {},
     //源码5241行
     //this, types, fn, data, selector
-    add: function( elem, types, handler, data, selector ) {
 
+    //#A,'click',function(){console.log('A被点击了')},undefined,undefined
+    //#A,'click',function(){点击了C，即C委托A的click事件被点击了},undefined,#C
+    add: function( elem, types, handler, data, selector ) {
+      //handleObjIn是自定义事件的handle集合
+      //handleObj是click,mouseout等事件的handle集合
       var handleObjIn, eventHandle, tmp,
         events, t, handleObj,
         special, handlers, type, namespaces, origType,
@@ -5284,7 +5293,6 @@
       if ( selector ) {
         jQuery.find.matchesSelector( documentElement, selector );
       }
-
       //确保handler有唯一的id
       // Make sure that the handler has a unique ID, used to find/remove it later
       if ( !handler.guid ) {
@@ -5344,32 +5352,39 @@
         //handleObj会传递给所有的event handlers
         // handleObj is passed to all event handlers
         handleObj = jQuery.extend( {
+          //click,mouseout...
           type: type,
+          //click,mouseout...
           origType: origType,
           data: data,
+          //事件处理函数,如 function(){console.log('aaaa')}
           handler: handler,
+          //索引，用于关联元素和事件
           guid: handler.guid,
+          //事件委托的标志，也是委托的对象选择器
           selector: selector,
           needsContext: selector && jQuery.expr.match.needsContext.test( selector ),
+          //命名空间，同一click事件有两个事件处理程序handler的话，
+          //用这个标识，方便删除或添加handler
           namespace: namespaces.join( "." )
         }, handleObjIn );
         
-        //第一次绑定事件，走这里
-        // Init the event handler queue if we're the first
-        if ( !( handlers = events[ type ] ) ) {
-          handlers = events[ type ] = [];
-          handlers.delegateCount = 0;
-          // Only use addEventListener if the special events handler returns false
-          if ( !special.setup ||
-            special.setup.call( elem, data, namespaces, eventHandle ) === false ) {
-            //目标元素有addEventListener的话，调用绑定click事件
+          //第一次绑定事件，走这里
+          // Init the event handler queue if we're the first
+          if ( !( handlers = events[ type ] ) ) {
+            handlers = events[ type ] = [];
+            handlers.delegateCount = 0;
+            // Only use addEventListener if the special events handler returns false
+            if ( !special.setup ||
+              special.setup.call( elem, data, namespaces, eventHandle ) === false ) {
+              //目标元素有addEventListener的话，调用绑定click事件
 
-            //eventHandle就绑定到addEventListener上
-            if ( elem.addEventListener ) {
-              elem.addEventListener( type, eventHandle );
+              //eventHandle就绑定到addEventListener上
+              if ( elem.addEventListener ) {
+                elem.addEventListener( type, eventHandle );
+              }
             }
           }
-        }
         //special的add/handleObj.handler.guidd的初始化处理
         if ( special.add ) {
           special.add.call( elem, handleObj );
@@ -5379,8 +5394,11 @@
           }
         }
 
+        //优先添加委托handler，再添加其他handler
         // Add to the element's handler list, delegates in front
+        //delegateCount即委托在#A上的事件数量
         if ( selector ) {
+          //在下标为handlers.delegateCount++的位置插入委托事件
           handlers.splice( handlers.delegateCount++, 0, handleObj );
         } else {
           handlers.push( handleObj );
@@ -5497,7 +5515,6 @@
         // _default:{}
         //}
         special = jQuery.event.special[ event.type ] || {};
-
       // Use the fix-ed jQuery.Event rather than the (read-only) native event
       args[ 0 ] = event;
 
@@ -5530,6 +5547,7 @@
       //先判断有没有冒泡
       //再判断有没有阻止剩下的handler执行
       while ( ( matched = handlerQueue[ i++ ] ) && !event.isPropagationStopped() ) {
+        console.log(matched,'matched5542')
         event.currentTarget = matched.elem;
 
         j = 0;
@@ -5573,6 +5591,7 @@
       
     //源码5547行
     //组装事件处理队列  
+    //event是fix过的MouseEvent, handlers  
     handlers: function( event, handlers ) {
       var i, handleObj, sel, matchedHandlers, matchedSelectors,
         handlerQueue = [],
@@ -5580,6 +5599,8 @@
         delegateCount = handlers.delegateCount,
         //目标元素
         cur = event.target;
+      //handlers，第一个handler是委托事件，第二个handler是自身事件
+      console.log(cur,handlers,this,'cur5594')
       // Find delegate handlers
       if ( delegateCount &&
 
@@ -5594,29 +5615,35 @@
         // ...but not arrow key "clicks" of radio inputs, which can have `button` -1 (gh-2343)
         !( event.type === "click" && event.button >= 1 ) ) {
         for ( ; cur !== this; cur = cur.parentNode || this ) {
-
+          console.log(cur,'cur5618')
           // Don't check non-elements (#13208)
           // Don't process clicks on disabled elements (#6911, #8165, #11382, #11764)
           if ( cur.nodeType === 1 && !( event.type === "click" && cur.disabled === true ) ) {
+            console.log(cur,'cur5622')
+
             matchedHandlers = [];
             matchedSelectors = {};
             for ( i = 0; i < delegateCount; i++ ) {
               handleObj = handlers[ i ];
-
+              //sel就是#C
               // Don't conflict with Object.prototype properties (#13203)
               sel = handleObj.selector + " ";
 
               if ( matchedSelectors[ sel ] === undefined ) {
                 matchedSelectors[ sel ] = handleObj.needsContext ?
                   jQuery( sel, this ).index( cur ) > -1 :
+
+                  //注意：jQuery.find()和jQuery().find()是不一样的
                   jQuery.find( sel, this, null, [ cur ] ).length;
               }
+              console.log(matchedSelectors,handleObj,jQuery.find( sel, this, null, [ cur ] ),'matchedSelectors5637')
               if ( matchedSelectors[ sel ] ) {
-                console.log(sel,matchedSelectors[ sel ],'sel5615')
                 matchedHandlers.push( handleObj );
               }
             }
+            console.log(matchedHandlers,sel,'matchedHandlers5641')
             if ( matchedHandlers.length ) {
+              console.log(cur,matchedHandlers,'cur5630')
               handlerQueue.push( { elem: cur, handlers: matchedHandlers } );
             }
           }
@@ -5625,10 +5652,13 @@
 
       // Add the remaining (directly-bound) handlers
       cur = this;
-      //0<2
+      //1<2
+      //将除委托事件的事件（如自身绑定的事件）放入handlerQueue中
       if ( delegateCount < handlers.length ) {
+        console.log(cur,handlers.slice( delegateCount ),'cur5642')
         handlerQueue.push( { elem: cur, handlers: handlers.slice( delegateCount ) } );
       }
+      console.log(handlerQueue,'handlerQueue5655')
       //[{
       // elem:xx,
       // handlers:[

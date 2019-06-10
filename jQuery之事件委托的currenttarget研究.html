@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery之事件委托的currenttarget研究</title>
+</head>
+
+<body>
+<script src="jQuery.js"></script>
+<div id="A" style="background-color: deeppink">
+  这是A
+
+  <div id="B" style="background-color: bisque">
+    这是B
+
+    <div id="C" style="background-color: aqua">
+    这是C
+    </div>
+
+    <div id="D" style="background-color: blueviolet">
+    这是D
+    </div>
+
+  </div>
+</div>
+
+<div id="E" style="background-color: brown">这是E</div>
+<script>
+
+
+  // $("#A").on("click" ,"#B",function () {
+  //   console.log("A委托B被点击了")
+  // })
+
+  $("#A").on("click" ,function (event) {
+    console.log(event,"A被点击了")
+  })
+
+  // $("#A").on("click" ,"#E",function (event) {
+  $("#A").on("click" ,"#C",function (event) {
+    // event.stopPropagation()
+    // console.log(event,"点击了E，即E委托A的click事件被点击了")
+    console.log(event,"点击了C，即C委托A的click事件被点击了")
+  })
+
+  // console.log($("#B").find('#C'),'find46');
+
+  // console.log($("#A"),'aaaaa46')
+
+  // $("#C").on("click",function (event) {
+  //   console.log(event,"C被点击了")
+  // })
+
+
+  // $("#A").on("click" ,function (e) {
+  //   console.log(e,"A被点击了")
+  // })
+  //
+  //
+  // $("#C").on("click" ,function (e) {
+  //   console.log(e,"C被点击了")
+  // })
+  //
+  // $("#B").on("click" ,function () {
+  //   console.log("B被点击了")
+  // })
+  //
+  // $("#C").on("click",function () {
+  //   console.log("C被点击了")
+  // })
+
+
+</script>
+</body>
+</html>
