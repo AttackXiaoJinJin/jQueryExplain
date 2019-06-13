@@ -7,24 +7,26 @@
 
 <body>
 <script src="jQuery.js"></script>
-<div id="A" style="background-color: deeppink">
+<!--<script src="jQuery3.4.1.js"></script>-->
+
+<div id="A" style="background-color: deeppink" tabindex="0">
   这是A
 
-  <div id="B" style="background-color: bisque">
-    这是B
+  <!--<div id="B" style="background-color: bisque" >-->
+    <!--这是B-->
 
-    <div id="C" style="background-color: aqua">
+    <div id="C" style="background-color: aqua" tabindex="1">
     这是C
     </div>
 
-    <div id="D" style="background-color: blueviolet">
-    这是D
-    </div>
+    <!--<div id="D" style="background-color: blueviolet">-->
+    <!--这是D-->
+    <!--</div>-->
 
-  </div>
+  <!--</div>-->
 </div>
 
-<div id="E" style="background-color: brown">这是E</div>
+<!--<div id="E" style="background-color: brown">这是E</div>-->
 <script>
 
 
@@ -32,26 +34,32 @@
   //   console.log("A委托B被点击了")
   // })
 
+  // $("#A").on("focus" ,function (event) {
   $("#A").on("click" ,function (event) {
     console.log(event,"A被点击了")
+    // console.log(event,"A被focus了")
   })
-  $("#A").on("focus" ,function (event) {
-    console.log(event,"A被focus了")
-  })
+
+  // $("#A").trigger("click")
+  // $("#A").on("focus" ,function (event) {
+  //   console.log(event,"A被focus了")
+  // })
 
   // $("#A").on("click" ,"#E",function (event) {
   $("#A").on("click" ,"#C",function (event) {
   //   // event.stopPropagation()
   //   // console.log(event,"点击了E，即E委托A的click事件被点击了")
-  //   console.log(event,"点击了C，即C委托A的click事件被点击了")
+    console.log(event,"点击了C，即C委托A的click事件被点击了")
   })
 
   // console.log($("#B").find('#C'),'find46');
 
-  // console.log($("#A"),'aaaaa46')
+  // console.log($("#A"),'aaaaaa46')
 
   // $("#C").on("click",function (event) {
-  //   console.log(event,"C被点击了")
+  // $("#C").on("focus",function (event) {
+    // console.log(event,"C被点击了")
+    // console.log(event,"C被focus了")
   // })
 
 

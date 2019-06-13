@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>momentTest</title>
+</head>
+<body>
+<script src="moment.js"></script>
+<script>
+  const arrayLike = { '1':1, '2':2, '3':3, 'a':'a', 'b':'b', length: 7}
+  console.log(arrayLike.length) //7
+  //直接使用数组的方法
+  //{3: 3, 4: 2, 5: 1, a: "a", b: "b", length: 7}
+  console.log(Array.prototype.reverse.call(arrayLike));
+  //undefined
+  console.log(Array.prototype.pop.call(arrayLike,4));
+  //+++3+2+1
+  console.log(Array.prototype.join.call(arrayLike,'+'));
+
+
+</script>
+</body>
+</html>
