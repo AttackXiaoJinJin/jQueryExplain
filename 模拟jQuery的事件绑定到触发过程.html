@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>模拟jQuery的事件绑定到触发过程</title>
+</head>
+
+<body>
+
+<div id="A" style="background-color: deeppink">
+  这是A
+
+  <div id="B" style="background-color: bisque">
+    这是B
+
+    <div id="C" style="background-color: aqua">
+    这是C
+    </div>
+
+  </div>
+</div>
+
+<script>
+  //数据缓存
+  let events={
+    // '#A':{
+    //   click:[
+    //     {
+    //       type:"click",
+    //       handler:function () {
+    //         console.log('点击了A')
+    //       },
+    //       guid:1,
+    //       selector:undefined
+    //
+    //     },
+    //     //'delegateCount':0,
+    //
+    //   ]
+    //
+    // }
+
+  }
+
+  function $(elemId){
+    //只考虑理想情况
+    // const element=document.querySelector(elemId)
+    // console.log(element,'element27')
+
+    function returnTrue(){
+      return true
+    }
+    function returnFalse(){
+      return false
+    }
+
+    $.event={
+      //不考虑用户的自定义事件
+      add:function (elemId,type,selectorReal,callbackReal) {
+        let elemData=events[elemId]
+
+        if(!elemData){
+          events[elemId]=elemData={}
+
+        }
+
+        if(!elemData[type]){
+          elemData[type]=[]
+          elemData[type].delegateCount=0
+          // console.log(events,'events71')
+        }
+
+        let handlersCount=elemData[type].length
+
+        elemData[type].push({
+          type:type,
+          handler:callbackReal,
+          guid:++handlersCount,
+          selector:selectorReal,
+        })
+        
+
+        elemData.handle=function(nativeEvent){
+          return $.event.dispatch(nativeEvent)
+        }
+
+
+        //addEventListener只绑定一次
+        document.querySelector(elemId).addEventListener(type,elemData.handle)
+      },
+
+      dispatch:function (nativeEvent,) {
+        let event=$.event.fix(nativeEvent)
+        let handlers=events['#'+event.target.id][event.type]
+
+        let handlerQueue=$.event.handlers( event, handlers )
+        //为什么要用变量代替，因为循环的时候，需要保留该值
+        let matched,handleObj
+        let i=0
+        while((matched=handlerQueue[i++])&&!event.isPropagationStopped()){
+          let j=0
+
+          while((handleObj=matched.handlers[j++])){
+            handleObj.handler(event)
+          }
+        }
+        // return event
+      },
+      
+      fix:function (nativeEvent,) {
+        let $event={}
+        $event.handleObj={
+          // data:undefined,
+          // guid: 2,
+          // handler:function(){console.log("A被点击了")}，
+          // namespace: "clickA",
+          // origType: "click",
+          // selector: "#B",  
+          // type: "click.clickA",
+        }
+        //就是MouseEvent
+        $event.originalEvent=nativeEvent
+        $event.target=nativeEvent.target
+        $event.type=nativeEvent.type
+          // delegateTarget: div#A,
+          //fix 的标志
+          // jQuery331087940272164138: true,
+          // currentTarget: div#A,
+          // isDefaultPrevented:xxx,
+        $event.timeStamp=Date.now()
+          // isDefaultPrevented:function(){return false}
+        $event.stopPropagation=function() {
+          this.isPropagationStopped = returnTrue;
+        }
+        $event.isPropagationStopped=returnFalse
+
+
+        return $event
+      },
+
+      handlers:function (event,handlers) {
+        let delegateCount = handlers.delegateCount
+        let cur=event.target
+        let handlerQueue=[]
+        // for(;cur!=)
+
+        // cur=this
+        if ( delegateCount < handlers.length ) {
+          handlerQueue.push( { elem: cur, handlers: handlers.slice( delegateCount ) } );
+        }
+
+        // console.log(handlerQueue,'handlerQueue140')
+        return handlerQueue
+      }
+      
+      
+    }
+
+    return {
+      on:function (type,selector,callback) {
+        // console.log(type,selector,callback,'type54')
+        let callbackReal,selectorReal
+        if(!type){
+          return
+        }
+
+        if(typeof selector==='function'&&!callback){
+          
+          selectorReal=undefined
+          callbackReal=selector
+          
+        }else if(typeof selector==='string'&&callback){
+          
+          selectorReal=selector
+          callbackReal=callback
+        
+        }
+        
+        return $.event.add(elemId,type,selectorReal,callbackReal)
+
+      }
+    }
+
+  }
+
+  
+
+  // $("#A").on("click" ,"#B",function () {
+  //   console.log("B委托A被点击了")
+  // })
+
+  $("#A").on("click" ,function (event) {
+    console.log(event,"A被点击了")
+  })
+
+  // $("#A").trigger("click")
+
+  // $("#A").on("click" ,"#C",function (event) {
+  // //   // event.stopPropagation()
+  //   console.log(event,"点击了C，即C委托A的click事件被点击了")
+  // })
+
+
+  // $("#C").on("click",function (event) {
+  //   console.log(event,"C被点击了")
+  // })
+
+</script>
+</body>
+</html>

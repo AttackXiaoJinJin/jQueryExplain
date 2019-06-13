@@ -5380,6 +5380,8 @@
 
               //eventHandle就绑定到addEventListener上
               if ( elem.addEventListener ) {
+                console.log(type,'elemData5410')
+
                 elem.addEventListener( type, eventHandle );
               }
             }
@@ -5406,7 +5408,6 @@
         // Keep track of which events have ever been used, for event optimization
         jQuery.event.global[ type ] = true;
       }
-      console.log(elemData,elemData.handle,'elemData5410')
     },
 
     // Detach an event or set of events from an element
