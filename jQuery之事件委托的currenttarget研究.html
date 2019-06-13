@@ -34,11 +34,12 @@
   //   console.log("A委托B被点击了")
   // })
 
-  // $("#A").on("focus" ,function (event) {
   $("#A").on("click" ,function (event) {
     console.log(event,"A被点击了")
-    // console.log(event,"A被focus了")
   })
+  // $("#A").on("click" ,function (event) {
+  //   console.log(event,"A又被点击了")
+  // })
 
   // $("#A").trigger("click")
   // $("#A").on("focus" ,function (event) {
@@ -46,11 +47,11 @@
   // })
 
   // $("#A").on("click" ,"#E",function (event) {
-  $("#A").on("click" ,"#C",function (event) {
+  // $("#A").on("click" ,"#C",function (event) {
   //   // event.stopPropagation()
   //   // console.log(event,"点击了E，即E委托A的click事件被点击了")
-    console.log(event,"点击了C，即C委托A的click事件被点击了")
-  })
+  //   console.log(event,"点击了C，即C委托A的click事件被点击了")
+  // })
 
   // console.log($("#B").find('#C'),'find46');
 
@@ -58,7 +59,7 @@
 
   // $("#C").on("click",function (event) {
   // $("#C").on("focus",function (event) {
-    // console.log(event,"C被点击了")
+  //   console.log(event,"C被点击了")
     // console.log(event,"C被focus了")
   // })
 
@@ -68,9 +69,10 @@
   // })
   //
   //
-  // $("#C").on("click" ,function (e) {
-  //   console.log(e,"C被点击了")
-  // })
+  $("#C").on("click" ,function (e) {
+    e.stopPropagation()
+    console.log(e,"C被点击了")
+  })
   //
   // $("#B").on("click" ,function () {
   //   console.log("B被点击了")

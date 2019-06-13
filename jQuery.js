@@ -5498,8 +5498,7 @@
       //修正event对象
       // Make a writable jQuery.Event from the native event object
       var event = jQuery.event.fix( nativeEvent );
-      console.log(event,'event5479')
-      
+
       var i, j, ret, matched, handleObj, handlerQueue,
         args = new Array( arguments.length ),
         //获取click事件的处理程序集合，结构如下：
@@ -5858,7 +5857,7 @@
       var e = this.originalEvent;
       //isPropagationStopped方法返回true
       this.isPropagationStopped = returnTrue;
-      console.log(this,'this5773')
+      console.log(e,'this5773')
       if ( e && !this.isSimulated ) {
         e.stopPropagation();
       }

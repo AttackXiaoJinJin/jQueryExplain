@@ -10,46 +10,25 @@
 <div id="A" style="background-color: deeppink">
   这是A
 
-  <div id="B" style="background-color: bisque">
+  <div id="B" style="background-color: aqua">
     这是B
-
-    <div id="C" style="background-color: aqua">
-    这是C
-    </div>
-
   </div>
+
 </div>
 
 <script>
   //数据缓存
-  let events={
-    // '#A':{
-    //   click:[
-    //     {
-    //       type:"click",
-    //       handler:function () {
-    //         console.log('点击了A')
-    //       },
-    //       guid:1,
-    //       selector:undefined
-    //
-    //     },
-    //     //'delegateCount':0,
-    //
-    //   ]
-    //
-    // }
-
-  }
+  let events={}
 
   function $(elemId){
     //只考虑理想情况
-    // const element=document.querySelector(elemId)
+    const element=document.querySelector(elemId)
     // console.log(element,'element27')
 
     function returnTrue(){
       return true
     }
+
     function returnFalse(){
       return false
     }
@@ -58,82 +37,76 @@
       //不考虑用户的自定义事件
       add:function (elemId,type,selectorReal,callbackReal) {
         let elemData=events[elemId]
-
+        
         if(!elemData){
           events[elemId]=elemData={}
+        }
 
+        elemData.handle=function(nativeEvent){
+          //锁定this
+          return $.event.dispatch.call(this,nativeEvent)
         }
 
         if(!elemData[type]){
           elemData[type]=[]
           elemData[type].delegateCount=0
-          // console.log(events,'events71')
+          //addEventListener只绑定一次
+          document.querySelector(elemId).addEventListener(type,elemData.handle)
         }
 
         let handlersCount=elemData[type].length
 
-        elemData[type].push({
+        let handlerObj={
           type:type,
           handler:callbackReal,
           guid:++handlersCount,
           selector:selectorReal,
-        })
-        
-
-        elemData.handle=function(nativeEvent){
-          return $.event.dispatch(nativeEvent)
         }
 
+        if ( selectorReal ) {
+          //在下标为handlers.delegateCount++的位置插入委托事件
+          elemData[type].splice( elemData[type].delegateCount++, 0, handlerObj);
+        } else {
+          elemData[type].push(handlerObj)
+        }
 
-        //addEventListener只绑定一次
-        document.querySelector(elemId).addEventListener(type,elemData.handle)
       },
 
       dispatch:function (nativeEvent,) {
         let event=$.event.fix(nativeEvent)
-        let handlers=events['#'+event.target.id][event.type]
-
-        let handlerQueue=$.event.handlers( event, handlers )
+        let handlers=events['#'+this.id][event.type]
+        //继续锁定this
+        let handlerQueue=$.event.handlers.call(this, event, handlers )
         //为什么要用变量代替，因为循环的时候，需要保留该值
         let matched,handleObj
         let i=0
         while((matched=handlerQueue[i++])&&!event.isPropagationStopped()){
           let j=0
-
           while((handleObj=matched.handlers[j++])){
+            event.handleObj=handleObj
             handleObj.handler(event)
           }
         }
+        console.log(handlerQueue,'handlerQueue91')
         // return event
       },
       
       fix:function (nativeEvent,) {
         let $event={}
-        $event.handleObj={
-          // data:undefined,
-          // guid: 2,
-          // handler:function(){console.log("A被点击了")}，
-          // namespace: "clickA",
-          // origType: "click",
-          // selector: "#B",  
-          // type: "click.clickA",
-        }
         //就是MouseEvent
         $event.originalEvent=nativeEvent
         $event.target=nativeEvent.target
         $event.type=nativeEvent.type
           // delegateTarget: div#A,
-          //fix 的标志
-          // jQuery331087940272164138: true,
           // currentTarget: div#A,
-          // isDefaultPrevented:xxx,
         $event.timeStamp=Date.now()
-          // isDefaultPrevented:function(){return false}
         $event.stopPropagation=function() {
           this.isPropagationStopped = returnTrue;
+          nativeEvent.stopPropagation()
         }
         $event.isPropagationStopped=returnFalse
-
+        //fix 的标志
+        $event['chen'+(new Date()).valueOf()]=true
 
         return $event
       },
@@ -142,28 +115,38 @@
         let delegateCount = handlers.delegateCount
         let cur=event.target
         let handlerQueue=[]
-        // for(;cur!=)
 
-        // cur=this
-        if ( delegateCount < handlers.length ) {
-          handlerQueue.push( { elem: cur, handlers: handlers.slice( delegateCount ) } );
+        for(;cur!==this;cur=cur.parentNode||this){
+          let matchedHandlers = []
+
+          for(let i=0;i<delegateCount;i++){
+            let handleObj=handlers[i]
+
+            matchedHandlers.push( handleObj )
+
+            handlerQueue.push( { elem: cur, handlers: matchedHandlers } )
+          }
         }
 
-        // console.log(handlerQueue,'handlerQueue140')
+        cur=this
+
+        if ( delegateCount < handlers.length ) {
+          handlerQueue.push( { elem: cur, handlers: handlers.slice( delegateCount ) } )
+        }
+
         return handlerQueue
       }
-      
-      
+
     }
 
     return {
       on:function (type,selector,callback) {
-        // console.log(type,selector,callback,'type54')
         let callbackReal,selectorReal
+        
         if(!type){
           return
         }
-
+        //如果selector是funcion的话，就没有委托元素了
         if(typeof selector==='function'&&!callback){
           
           selectorReal=undefined
@@ -183,27 +166,40 @@
 
   }
 
-  
 
-  // $("#A").on("click" ,"#B",function () {
-  //   console.log("B委托A被点击了")
+  //仅支持id选择器，事件冒泡与事件委托
+
+  //=========test1===============
+  // $("#A").on("click" ,function (event) {
+  //   console.log(event,"A被点击了")
+  // })
+  // $("#A").on("click" ,function (event) {
+  //   console.log(event,"A又被点击了")
   // })
 
-  $("#A").on("click" ,function (event) {
-    console.log(event,"A被点击了")
+  //=========test2===============
+  // $("#A").on("click" ,function (event) {
+  //   console.log(event,"A被点击了")
+  // })
+  $("#A").on("click" ,"#B",function (event) {
+    // event.stopPropagation()
+    console.log(event,"B委托A被点击了")
   })
+  
+  console.log(document.querySelector('#A'),'querySelector189')
 
+  //=========test3===============
+  // $("#A").on("click" ,function (event) {
+  //   console.log(event,"A被点击了")
+  // })
+  // $("#B").on("click",function (event) {
+  //   // event.stopPropagation()
+  //   console.log(event,"B被点击了")
+  // })
+
+  //==========test4==============
   // $("#A").trigger("click")
 
-  // $("#A").on("click" ,"#C",function (event) {
-  // //   // event.stopPropagation()
-  //   console.log(event,"点击了C，即C委托A的click事件被点击了")
-  // })
-
-
-  // $("#C").on("click",function (event) {
-  //   console.log(event,"C被点击了")
-  // })
 
 </script>
 </body>
