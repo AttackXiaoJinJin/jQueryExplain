@@ -41,7 +41,8 @@
   //   console.log(event,"A又被点击了")
   // })
 
-  // $("#A").trigger("click")
+  $("#A").trigger("click")
+
   // $("#A").on("focus" ,function (event) {
   //   console.log(event,"A被focus了")
   // })
@@ -69,10 +70,10 @@
   // })
   //
   //
-  $("#C").on("click" ,function (e) {
-    e.stopPropagation()
-    console.log(e,"C被点击了")
-  })
+  // $("#C").on("click" ,function (e) {
+  //   e.stopPropagation()
+  //   console.log(e,"C被点击了")
+  // })
   //
   // $("#B").on("click" ,function () {
   //   console.log("B被点击了")

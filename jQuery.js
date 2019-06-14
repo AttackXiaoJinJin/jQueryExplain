@@ -5837,7 +5837,7 @@
   //源码5749行
   jQuery.Event.prototype = {
     constructor: jQuery.Event,
-      isDefaultPrevented: returnFalse,
+    isDefaultPrevented: returnFalse,
     isPropagationStopped: returnFalse,
     isImmediatePropagationStopped: returnFalse,
     isSimulated: false,

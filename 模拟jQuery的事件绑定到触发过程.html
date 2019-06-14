@@ -74,7 +74,10 @@
 
       dispatch:function (nativeEvent,) {
         let event=$.event.fix(nativeEvent)
+        
         let handlers=events['#'+this.id][event.type]
+        
+        
         //继续锁定this
         let handlerQueue=$.event.handlers.call(this, event, handlers )
         //为什么要用变量代替，因为循环的时候，需要保留该值
@@ -87,7 +90,6 @@
             handleObj.handler(event)
           }
         }
-        console.log(handlerQueue,'handlerQueue91')
         // return event
       },
       
@@ -135,7 +137,28 @@
         }
 
         return handlerQueue
-      }
+      },
+
+      trigger:function (elemId,type) {
+        let element=document.querySelector(elemId)
+        let eventPath=[]
+        let cur=element
+        let event={}
+        event.target=cur
+        event.type=type
+
+        for(;cur;cur=cur.parentNode){
+          eventPath.push( cur );
+        }
+        let i=0
+        //不考虑阻止冒泡的情况
+        while((cur=eventPath[i++])){
+          let handle=events['#'+cur.id]&&events['#'+cur.id].handle
+          if(handle){
+            handle.call(cur,event)
+          }
+        }
+      },
 
     }
 
@@ -161,7 +184,13 @@
         
         return $.event.add(elemId,type,selectorReal,callbackReal)
 
-      }
+      },
+
+
+      trigger:function (type) {
+        return $.event.trigger(elemId,type)
+      },
+
     }
 
   }
@@ -170,23 +199,22 @@
   //仅支持id选择器，事件冒泡与事件委托
 
   //=========test1===============
-  // $("#A").on("click" ,function (event) {
-  //   console.log(event,"A被点击了")
-  // })
-  // $("#A").on("click" ,function (event) {
-  //   console.log(event,"A又被点击了")
-  // })
+  $("#A").on("click" ,function (event) {
+    console.log(event,"A被点击了")
+  })
+  $("#A").on("click" ,function (event) {
+    console.log(event,"A又被点击了")
+  })
 
   //=========test2===============
   // $("#A").on("click" ,function (event) {
   //   console.log(event,"A被点击了")
   // })
-  $("#A").on("click" ,"#B",function (event) {
+  // $("#A").on("click" ,"#B",function (event) {
     // event.stopPropagation()
-    console.log(event,"B委托A被点击了")
-  })
+    // console.log(event,"B委托A被点击了")
+  // })
   
-  console.log(document.querySelector('#A'),'querySelector189')
 
   //=========test3===============
   // $("#A").on("click" ,function (event) {
@@ -198,6 +226,12 @@
   // })
 
   //==========test4==============
+  // $("#A").on("click" ,function (event) {
+  //   console.log(event,"A被点击了")
+  // })
+  // $("#A").on("click" ,function (event) {
+  //   console.log(event,"A又被点击了")
+  // })
   // $("#A").trigger("click")
 
 
