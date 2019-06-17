@@ -393,13 +393,14 @@
       Ctor = hasOwn.call( proto, "constructor" ) && proto.constructor;
       return typeof Ctor === "function" && fnToString.call( Ctor ) === ObjectFunctionString;
     },
-
+    //源码396行
+    //判断是不是空对象
     isEmptyObject: function( obj ) {
 
       /* eslint-disable no-unused-vars */
       // See https://github.com/eslint/eslint/issues/6125
       var name;
-
+      //如果空对象里有key，则不是空对象
       for ( name in obj ) {
         return false;
       }
@@ -3649,20 +3650,25 @@
           // ... .then handlers, argument index, [final state]
           [ "notify", "progress", jQuery.Callbacks( "memory" ),
             jQuery.Callbacks( "memory" ), 2 ],
+
           [ "resolve", "done", jQuery.Callbacks( "once memory" ),
             jQuery.Callbacks( "once memory" ), 0, "resolved" ],
+
           [ "reject", "fail", jQuery.Callbacks( "once memory" ),
             jQuery.Callbacks( "once memory" ), 1, "rejected" ]
         ],
         state = "pending",
         promise = {
+          //状态pending
           state: function() {
             return state;
           },
+          //
           always: function() {
             deferred.done( arguments ).fail( arguments );
             return this;
           },
+          //catch是关键字，所以要加引号区分
           "catch": function( fn ) {
             return promise.then( null, fn );
           },
@@ -3933,8 +3939,25 @@
       if ( func ) {
         func.call( deferred, deferred );
       }
-
+      console.log(deferred,'deferred3937')
       // All done!
+      //{
+      // always :function(){}
+      // catch :function(){}
+      // done :function(){}
+      // fail :function(){}
+      // notify :function(){}
+      // notifyWith :function(){}
+      // pipe :function(){}
+      // progress :function(){}
+      // promise :function(){}
+      // reject :function(){}
+      // rejectWith :function(){}
+      // resolve :function(){}
+      // resolveWith :function(){}
+      // state :function(){}
+      // then :function(){}
+      //}
       return deferred;
     },
 
@@ -7589,6 +7612,8 @@
   }
 
 // Generate parameters to create a standard animation
+  //源码7592行
+  //"hide",undefined
   function genFx( type, includeWidth ) {
     var which,
       i = 0,
@@ -7599,6 +7624,13 @@
     includeWidth = includeWidth ? 1 : 0;
     for ( ; i < 4; i += 2 - includeWidth ) {
       which = cssExpand[ i ];
+      // {
+      //   height:'hide',
+      //   marginTop:'hide',
+      //   paddingTop:'hide',
+      //   marginBottom:'hide',
+      //   paddingBottom:'hide',
+      // }
       attrs[ "margin" + which ] = attrs[ "padding" + which ] = type;
     }
 
@@ -7831,17 +7863,27 @@
       }
     }
   }
-
+  //源码7844行
+  //elem:目标元素
+  //properties:{height: "hide",marginBottom: "hide",
+  //           marginTop: "hide",paddingBottom: "hide",paddingTop: "hide}
+  //options:{complete:false,duration: 400,easing: undefined,
+  //           old: false,queue: "fx"}
   function Animation( elem, properties, options ) {
+    console.log(elem, properties, options,'7847options')
+    
+    
     var result,
       stopped,
       index = 0,
+      //1
       length = Animation.prefilters.length,
       deferred = jQuery.Deferred().always( function() {
 
         // Don't match elem in the :animated selector
         delete tick.elem;
       } ),
+      
       tick = function() {
         if ( stopped ) {
           return false;
@@ -7876,6 +7918,7 @@
         deferred.resolveWith( elem, [ animation ] );
         return false;
       },
+      
       animation = deferred.promise( {
         elem: elem,
         props: jQuery.extend( {}, properties ),
@@ -7918,6 +7961,7 @@
           return this;
         }
       } ),
+      
       props = animation.props;
 
     propFilter( props, animation.opts.specialEasing );
@@ -7985,7 +8029,7 @@
         Animation.tweeners[ prop ].unshift( callback );
       }
     },
-
+    //defaultPrefilter是一个function
     prefilters: [ defaultPrefilter ],
 
     prefilter: function( callback, prepend ) {
@@ -7996,8 +8040,17 @@
       }
     }
   } );
-
+  //源码8009行
+  //undefiend undefined undefined
   jQuery.speed = function( speed, easing, fn ) {
+    // opt={
+    //   complete:false,
+    //   duration: 400,
+    //   easing: undefined,
+    //   old: false,
+    //   queue: "fx",
+    // }
+    
     var opt = speed && typeof speed === "object" ? jQuery.extend( {}, speed ) : {
       complete: fn || !fn && easing ||
         isFunction( speed ) && speed,
@@ -8032,7 +8085,7 @@
       if ( isFunction( opt.old ) ) {
         opt.old.call( this );
       }
-
+      //如果queue有值得话，就出队列
       if ( opt.queue ) {
         jQuery.dequeue( this, opt.queue );
       }
@@ -8050,11 +8103,21 @@
       // Animate to the value specified
         .end().animate( { opacity: to }, speed, easing, callback );
     },
+    //源码8062行
     animate: function( prop, speed, easing, callback ) {
+      //是否是空对象，false
       var empty = jQuery.isEmptyObject( prop ),
+        // opt={
+        //   complete:false,
+        //   duration: 400,
+        //   easing: undefined,
+        //   old: false,
+        //   queue: "fx",
+        // }
         optall = jQuery.speed( speed, easing, callback ),
+        
         doAnimation = function() {
-
+         
           // Operate on a copy of prop so per-property easing won't be lost
           var anim = Animation( this, jQuery.extend( {}, prop ), optall );
 
@@ -8069,6 +8132,7 @@
         this.each( doAnimation ) :
         this.queue( optall.queue, doAnimation );
     },
+
     stop: function( type, clearQueue, gotoEnd ) {
       var stopQueue = function( hooks ) {
         var stop = hooks.stop;
@@ -8182,7 +8246,16 @@
     fadeOut: { opacity: "hide" },
     fadeToggle: { opacity: "toggle" }
   }, function( name, props ) {
+    //slideUp
     jQuery.fn[ name ] = function( speed, easing, callback ) {
+      //props:
+      // {
+      //   height:'hide',
+      //   marginTop:'hide',
+      //   paddingTop:'hide',
+      //   marginBottom:'hide',
+      //   paddingBottom:'hide',
+      // }
       return this.animate( props, speed, easing, callback );
     };
   } );
@@ -9751,6 +9824,7 @@
     ajaxTransport: addToPrefiltersOrTransports( transports ),
 
     // Main method
+    //源码9827行
     ajax: function( url, options ) {
 
       // If url is an object, simulate pre-1.5 signature

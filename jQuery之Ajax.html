@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery之Ajax</title>
+</head>
+<body>
+
+<script src="jQuery.js"></script>
+
+<script>
+
+  //异步post请求
+  async function ajaxPost(url, data, beforeSend, complete) {
+    //初始化
+    let result = {
+      isException: true,
+      errorMessage: ''
+    };
+    await $.ajax(
+      //参数{xxx}
+      {
+      url: url,
+      type: 'post',
+      data: typeof (data) == 'object' ? JSON.stringify(data) : data,
+      dataType: 'json',
+      async: true,
+      xhrFields: {
+        withCredentials: true
+      },
+      beforeSend: function() {
+        if (beforeSend) {
+          beforeSend()
+        }
+      },
+      complete: function() {
+        if (complete) {
+          complete()
+        }
+      },
+      success: function(data) {
+        if (data) {
+          result = data
+          if (data.isException) {
+            routeAjax(data)
+          }
+        } else {
+          toLoginPage(); //跳转到登录页面
+        }
+      },
+      error: function(error) {
+        if (error)
+          result = {
+            isException: true,
+            errorMessage: 'The request failed!'
+          };
+
+      }
+    })
+    return result
+  }
+
+
+  //同步get请求
+  function asyncAjaxGet(url, data) {
+    let result;
+    let request = new XMLHttpRequest();
+
+    request.open('GET', url, false);
+    request.withCredentials = true;
+    request.send(null);
+    if (request.status === 200) {
+      result = JSON.parse(request.responseText)
+    }
+    return result;
+  }
+
+  //同步post请求
+  export function asyncAjaxPost(url, data) {
+    // let result;
+    // let d=makeURL(data);
+    // let request = new XMLHttpRequest();
+    // request.open('POST', SAPIServerURL+url, false);
+    // request.withCredentials = true;
+    // request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+    // request.send(d);console.log(d)
+    // if (request.status === 200) {
+    //     result= JSON.parse(request.responseText);
+    // }
+    // return result;
+
+    let r = {};
+    $.ajax({
+      url: SAPIServerURL + url,
+      type: 'post',
+      data: typeof (data) == 'object' ? JSON.stringify(data) : data,
+      dataType: 'json',
+      async: false,
+      xhrFields: {
+        withCredentials: true
+      },
+      success: function(result) {
+        r = result;
+        if (result) {
+        } else {
+          toLoginPage(); //跳转到登录页面
+        }
+      },
+      error: function(error) {
+        if (error)
+          r = {
+            isException: true,
+            errorMessage: '同步请求出错!'
+          };
+
+      }
+    })
+    return r;
+  }
+
+  //异步get请求
+  async function ajaxGet(url, data) {
+
+    let result = {
+      isException: true,
+      errorMessage: ''
+    };
+    await $.ajax({
+      url: SAPIServerURL + url,
+      type: 'get',
+      data: data,
+      dataType: 'json',
+      async: true,
+      xhrFields: {
+        withCredentials: true
+      },
+      success: function(res) {
+        if (res) {
+          result = res;
+          if (res.isException) {
+            routeAjax(res)
+          }
+        } else {
+          toLoginPage(); //跳转到登录页面
+        }
+      },
+      error: function(error) {
+        if (error)
+          result = {
+            isException: true,
+            errorMessage: 'The request failed!'
+          };
+      }
+    })
+
+    return result
+  }
+
+  //=========================================
+  ajaxPost('/xxx', {name: 'chen', color: 'red'})
+    .then(res=> {
+      //isException 为false
+      if (!res.isException) {
+        //xxx
+      }
+    })
+
+
+
+
+</script>
+</body>
+</html>
