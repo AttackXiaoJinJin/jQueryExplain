@@ -10,7 +10,7 @@
 
 <script>
 
-  //异步post请求
+  //同步post请求
   async function ajaxPost(url, data, beforeSend, complete) {
     //初始化
     let result = {
@@ -20,14 +20,27 @@
     await $.ajax(
       //参数{xxx}
       {
-      url: url,
-      type: 'post',
-      data: typeof (data) == 'object' ? JSON.stringify(data) : data,
-      dataType: 'json',
-      async: true,
-      xhrFields: {
-        withCredentials: true
-      },
+        url: url,
+        type: 'post',
+        data: typeof (data) == 'object' ? JSON.stringify(data) : data,
+        dataType: 'json',
+        async: true,
+        xhrFields: {
+          withCredentials: true
+        },
+
+      // }).done(function(complete) {
+      //   if (complete) {
+      //     complete()
+      //   }
+      // }).fail(function(error) {
+      //   if (error)
+      //     result = {
+      //       isException: true,
+      //       errorMessage: 'The request failed!'
+      //     };
+      // })
+
       beforeSend: function() {
         if (beforeSend) {
           beforeSend()
@@ -61,7 +74,7 @@
   }
 
 
-  //同步get请求
+  //异步get请求
   function asyncAjaxGet(url, data) {
     let result;
     let request = new XMLHttpRequest();
@@ -75,8 +88,8 @@
     return result;
   }
 
-  //同步post请求
-  export function asyncAjaxPost(url, data) {
+  //异步post请求
+  function asyncAjaxPost(url, data) {
     // let result;
     // let d=makeURL(data);
     // let request = new XMLHttpRequest();
@@ -118,38 +131,33 @@
     return r;
   }
 
-  //异步get请求
-  async function ajaxGet(url, data) {
+  //同步get请求
+  function ajaxGet(url, data) {
 
     let result = {
       isException: true,
       errorMessage: ''
     };
-    await $.ajax({
-      url: SAPIServerURL + url,
+    $.ajax({
+      url: url,
       type: 'get',
       data: data,
       dataType: 'json',
       async: true,
+      //===解决跨域===
       xhrFields: {
         withCredentials: true
       },
+      crossDomain: true,
+      //============
+      beforeSend: function() {
+
+      },
       success: function(res) {
-        if (res) {
-          result = res;
-          if (res.isException) {
-            routeAjax(res)
-          }
-        } else {
-          toLoginPage(); //跳转到登录页面
-        }
+        console.log(res,'res151')
       },
       error: function(error) {
-        if (error)
-          result = {
-            isException: true,
-            errorMessage: 'The request failed!'
-          };
+        console.log(error,'error154')
       }
     })
 
@@ -157,13 +165,67 @@
   }
 
   //=========================================
-  ajaxPost('/xxx', {name: 'chen', color: 'red'})
-    .then(res=> {
-      //isException 为false
-      if (!res.isException) {
-        //xxx
+  let data={
+    ppe:0,
+    period:2,
+  }
+  let url='http://192.168.1.73:12017/data/rentlist/91310105324627168E-xm-000001'
+
+  //返回jqXHR对象，里面包含done，fail方法
+  //.done()的话，也是返回的同样的jqXHR对象
+  // console.log($.ajax({
+  //   url: url,
+  //   type: 'get',
+  //   data: data,
+  //   dataType: 'json',
+  //   //是否异步
+  //   async: true,
+  //   //===解决跨域===
+  //   // xhrFields: {
+  //   // withCredentials: true
+  //   // },
+  //   // crossDomain: true,
+  //   //============
+  //   headers: {
+  //     'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImxvY2FsX2RldiIsImVtYWlsIjoiY29uZy5qaWFAZnVzaW9udHJlZS5jbiIsImlhdCI6MTU1NzIxMDI4MCwiZXhwIjoxNTg4NzQ2MjgwfQ.BxbHwfX9-XL7Y9AvGZMgf55fUE5EbuoPWkG3YbfYVgY',
+  //     // 'Access-Control-Allow-Origin':'*',
+  //     // 'Access-Control-Allow-Methods':'PUT, POST, GET, DELETE, OPTIONS',
+  //     // 'Access-Control-Allow-Headers':'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild',
+  //     'Content-Type': 'application/json',
+  //   },
+  //
+  //   success: function (res) {
+  //     console.log(res, 'res151')
+  //   },
+  //   error: function (error) {
+  //     console.log(error, 'error154')
+  //   }
+  // }).done(function (result) {
+  //
+  // }),'log201');
+
+
+  let prefilters = {};
+  let addToPrefiltersOrTransports = function(prefilters) {
+
+    return function(func) {
+      prefilters['*'] = func;
+    }
+  }
+  let ajaxPrefilter = addToPrefiltersOrTransports(prefilters)
+
+  ajaxPrefilter(function(options) {
+    return {
+      send: function() {
+
+      },
+      callback: function() {
+
       }
-    })
+    }
+  })
+
+
 
 
 

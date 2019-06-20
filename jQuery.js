@@ -288,6 +288,12 @@
     splice: arr.splice
   };
   //extend是jQuery的继承方法，这样有新方法时就可以直接挂在到jQuery上
+  //源码291行
+  //将一个或多个对象合并到目标对象上
+  //jQuery.extend( true, target, deep )
+  //true:进行深度合并
+  //target:目标对象
+  //deep:被合并的对象
   jQuery.extend = jQuery.fn.extend = function() {
     var options, name, src, copy, copyIsArray, clone,
       target = arguments[ 0 ] || {},
@@ -3372,8 +3378,10 @@
   var rnothtmlwhite = ( /[^\x20\t\r\n\f]+/g );
 
 
-
+  //将特定格式的string（空格分开），转化为特定格式的object（{xxx:true,xxx:true,...}）
 // Convert String-formatted options into Object-formatted ones
+  //源码3377行
+  //'once memory' —> {once:true,memory:true}
   function createOptions( options ) {
     var object = {};
     jQuery.each( options.match( rnothtmlwhite ) || [], function( _, flag ) {
@@ -3382,30 +3390,31 @@
     return object;
   }
 
-  /*
+  /*创建一个使用以下参数的callback列表
  * Create a callback list using the following parameters:
- *
+ *  options:是一个可选的空格分开的参数，它可以改变callback列表的行为或形成新的option对象
  *	options: an optional list of space-separated options that will change how
  *			the callback list behaves or a more traditional option object
- *
+ * 默认情况下一个回调列表会表现成一个event callback列表并且会触发多次
  * By default a callback list will act like an event callback list and can be
  * "fired" multiple times.
- *
+ * option可选值：
  * Possible options:
- *
+ *  确保callback列表只会被触发一次，比如Deferred对象
  *	once:			will ensure the callback list can only be fired once (like a Deferred)
- *
+ *  保持跟踪之前的values，并且会在list用最新的values触发后，调用该回调函数
  *	memory:			will keep track of previous values and will call any callback added
  *					after the list has been fired right away with the latest "memorized"
  *					values (like a Deferred)
- *
+ *  //确保callback只会被添加一次
  *	unique:			will ensure a callback can only be added once (no duplicate in the list)
- *
+ *  //当callbak返回false时打断调用
  *	stopOnFalse:	interrupt callings when a callback returns false
  *
  */
-
+  //源码3407行
   //callbacks回调对象，函数的统一管理
+  //once memory
   jQuery.Callbacks = function( options ) {
 
     // Convert options from String-formatted to Object-formatted if needed
@@ -3414,6 +3423,8 @@
       createOptions( options ) :
       jQuery.extend( {}, options );
 
+    //options: {once:true,memory:true}
+    //用来知道list是否正被调用
     var // Flag to know if list is currently firing
       firing,
 
@@ -3434,10 +3445,10 @@
 
       // Index of currently firing callback (modified by add/remove as needed)
       firingIndex = -1,
-
+      //触发的回调函数
       // Fire callbacks
       fire = function() {
-
+        //true
         // Enforce single-firing
         locked = locked || options.once;
 
@@ -3445,6 +3456,7 @@
         // respecting firingIndex overrides and runtime changes
         fired = firing = true;
         for ( ; queue.length; firingIndex = -1 ) {
+          //从queue移除第一个元素，并返回该元素
           memory = queue.shift();
           while ( ++firingIndex < list.length ) {
 
@@ -3599,7 +3611,7 @@
 
     return self;
   };
-
+  //===========Callbacks end================
 
   function Identity( v ) {
     return v;
@@ -3644,6 +3656,7 @@
   jQuery.extend( {
 
     Deferred: function( func ) {
+      //把用户自定义的内部回调函数给注册到 jqXHR 对象上
       var tuples = [
 
           // action, add listener, callbacks,
@@ -3676,8 +3689,9 @@
           // Keep pipe for back-compat
           pipe: function( /* fnDone, fnFail, fnProgress */ ) {
             var fns = arguments;
-
+            //
             return jQuery.Deferred( function( newDefer ) {
+              //把参数的回调函数注册到内部 jqXHR 对象上,实现统一调用
               jQuery.each( tuples, function( i, tuple ) {
 
                 // Map tuples (progress, done, fail) to arguments (done, fail, progress)
@@ -9307,6 +9321,8 @@
       };
     } );
   }
+  //源码9310行
+  //获取当前页面地址
   var location = window.location;
 
   var nonce = Date.now();
@@ -9463,6 +9479,7 @@
     rheaders = /^(.*?):[ \t]*([^\r\n]*)$/mg,
 
     // #7653, #8125, #8152: local protocol detection
+    //测试是不是以 :about、:file、:res
     rlocalProtocol = /^(?:about|app|app-storage|.+-extension|file|res|widget):$/,
     rnoContent = /^(?:GET|HEAD)$/,
     rprotocol = /^\/\//,
@@ -9476,6 +9493,7 @@
 	 * 4) the catchall symbol "*" can be used
 	 * 5) execution will start with transport dataType and THEN continue down to "*" if needed
 	 */
+    //预过滤器
     prefilters = {},
 
     /* Transports bindings
@@ -9493,8 +9511,9 @@
   originAnchor.href = location.href;
 
 // Base "constructor" for jQuery.ajaxPrefilter and jQuery.ajaxTransport
+  //初始化ajax前置过滤器和请求分发器
   function addToPrefiltersOrTransports( structure ) {
-
+    console.log(structure,'structure9516')
     // dataTypeExpression is optional and defaults to "*"
     return function( dataTypeExpression, func ) {
 
@@ -9556,8 +9575,17 @@
 // A special extend for ajax options
 // that takes "flat" options (not to be deep extended)
 // Fixes #9887
+
+  //源码9570行
+  //target, jQuery.ajaxSettings
+
+  //将src的属性赋值给target
   function ajaxExtend( target, src ) {
     var key, deep,
+      // flatOptions: {
+      //   url: true,
+      //   context: true
+      // }
       flatOptions = jQuery.ajaxSettings.flatOptions || {};
 
     for ( key in src ) {
@@ -9738,10 +9766,13 @@
     // Last-Modified header cache for next request
     lastModified: {},
     etag: {},
-
+    //默认设置
+    //源码9753行
     ajaxSettings: {
+      //当前页面url
       url: location.href,
       type: "GET",
+      //location.protocol:返回url的协议部分，如 https: / http:
       isLocal: rlocalProtocol.test( location.protocol ),
       global: true,
       processData: true,
@@ -9807,20 +9838,38 @@
       }
     },
 
+    // 通过ajaxSettings和settings作用域
+    // 为target创建一个完全成熟的setting object
+    // 如果target省略的话，写入ajaxSettings
+
     // Creates a full fledged settings object into target
     // with both ajaxSettings and settings fields.
     // If target is omitted, writes into ajaxSettings.
+
+    //{}, {}
+    //源码9832行
+    //将settings的属性赋给target
+    //settings不存在的话，将target属性赋给jQuery.ajaxSettings
     ajaxSetup: function( target, settings ) {
       return settings ?
-
+        //创建一个settings对象
         // Building a settings object
+
+        //jQuery.ajaxSettings:{
+        // url: xxx,
+        // type: xxx,
+        //  ...
+        // }
+
+        //将jQuery.ajaxSettings和settings的属性赋值给target
         ajaxExtend( ajaxExtend( target, jQuery.ajaxSettings ), settings ) :
 
         // Extending ajaxSettings
         ajaxExtend( jQuery.ajaxSettings, target );
     },
-
+    //ajax前置过滤器
     ajaxPrefilter: addToPrefiltersOrTransports( prefilters ),
+    //ajax请求分发器
     ajaxTransport: addToPrefiltersOrTransports( transports ),
 
     // Main method
@@ -9836,39 +9885,81 @@
       // Force options to be an object
       options = options || {};
 
-      var transport,
+      // {
+      //   url: url,
+      //     type: 'post',
+      //   data: typeof (data) == 'object' ? JSON.stringify(data) : data,
+      //   dataType: 'json',
+      //   async: true,
+      //   xhrFields: {
+      //   withCredentials: true
+      // },
+      //   beforeSend: function() {
+      //     if (beforeSend) {
+      //       beforeSend()
+      //     }
+      //   },
+      //   complete: function() {
+      //     if (complete) {
+      //       complete()
+      //     }
+      //   },
+      //   success: function(data) {
+      //     if (data) {
+      //       result = data
+      //       if (data.isException) {
+      //         routeAjax(data)
+      //       }
+      //     } else {
+      //       toLoginPage(); //跳转到登录页面
+      //     }
+      //   },
+      //   error: function(error) {
+      //     if (error)
+      //       result = {
+      //         isException: true,
+      //         errorMessage: 'The request failed!'
+      //       };
+      //
+      //   }
+      // }
 
+
+      var transport,
+        //禁止缓存
         // URL without anti-cache param
         cacheURL,
-
+        //header:{xxx}
         // Response headers
         responseHeadersString,
         responseHeaders,
-
+        //超时处理
         // timeout handle
         timeoutTimer,
-
+        //清理url中的变量
         // Url cleanup var
         urlAnchor,
-
+        //发送前是false，发送完毕后是true
         // Request state (becomes false upon send and true upon completion)
         completed,
-
+        //用来知晓全局的事件是否被触发
         // To know if global events are to be dispatched
         fireGlobals,
-
+        //循环的变量
         // Loop variable
         i,
-
+        //url中不缓存的部分
         // uncached part of the url
         uncached,
-
+        //经过一系列处理后，构建最后的options={xxx}
         // Create the final options object
-        s = jQuery.ajaxSetup( {}, options ),
 
+        //
+        s = jQuery.ajaxSetup( {}, options ),
+        //回调内容
         // Callbacks context
         callbackContext = s.context || s,
-
+        //
         // Context for global events is callbackContext if it is a DOM node or jQuery collection
         globalEventContext = s.context &&
         ( callbackContext.nodeType || callbackContext.jquery ) ?
@@ -9876,9 +9967,17 @@
           jQuery.event,
 
         // Deferreds
+        //异步队列deferred
         deferred = jQuery.Deferred(),
+        //completeDeferred:{
+        //      add:function(){}
+        //      remove:function(){}
+        //      has:function(){}
+        //}
+        //回调队列callbacks
+        //所有的回调队列，不管任何时候增加的回调保证只触发一次
         completeDeferred = jQuery.Callbacks( "once memory" ),
-
+        //状态码
         // Status-dependent callbacks
         statusCode = s.statusCode || {},
 
@@ -9960,8 +10059,10 @@
             return this;
           }
         };
+      //======jqXHR end======
 
       // Attach deferreds
+      //将jqXHR转化为deferred对象并添加 promise 的属性和方法
       deferred.promise( jqXHR );
 
       // Add protocol if not provided (prefilters might expect it)
@@ -10101,8 +10202,12 @@
       // Aborting is no longer a cancellation
       strAbort = "abort";
 
+      //为deferred过的jqXHR对象添加回调方法s.complete
       // Install callbacks on deferreds
       completeDeferred.add( s.complete );
+      //如果返回完整地deferred对象，那么外部可以在Ajax请求结束前
+      //触发回调函数resolve，所以只应该返回只读的deferred对象-deferred.promise()
+      //再把success和error改成done、fail
       jqXHR.done( s.success );
       jqXHR.fail( s.error );
 
@@ -10259,9 +10364,10 @@
           }
         }
       }
-
+      console.log(jqXHR,'jqxhr10361')
       return jqXHR;
     },
+    //========ajax end==========
 
     getJSON: function( url, data, callback ) {
       return jQuery.get( url, data, callback, "json" );
@@ -10389,7 +10495,8 @@
 
 
 
-
+  //源码10450行
+  //新建xhr对象
   jQuery.ajaxSettings.xhr = function() {
     try {
       return new window.XMLHttpRequest();
