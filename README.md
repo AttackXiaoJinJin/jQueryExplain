@@ -1,4 +1,4 @@
-<h1>jQurey源码解析
+<h1>jQurey源码解析</h1>
 
 [jQuery的遍历结构设计之遍历祖先](https://www.jianshu.com/p/936f84a01e13)
 
