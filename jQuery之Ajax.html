@@ -171,59 +171,40 @@
   }
   let url='http://192.168.1.73:12017/data/rentlist/91310105324627168E-xm-000001'
 
-  //返回jqXHR对象，里面包含done，fail方法
-  //.done()的话，也是返回的同样的jqXHR对象
-  // console.log($.ajax({
-  //   url: url,
-  //   type: 'get',
-  //   data: data,
-  //   dataType: 'json',
-  //   //是否异步
-  //   async: true,
-  //   //===解决跨域===
-  //   // xhrFields: {
-  //   // withCredentials: true
-  //   // },
-  //   // crossDomain: true,
-  //   //============
-  //   headers: {
-  //     'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImxvY2FsX2RldiIsImVtYWlsIjoiY29uZy5qaWFAZnVzaW9udHJlZS5jbiIsImlhdCI6MTU1NzIxMDI4MCwiZXhwIjoxNTg4NzQ2MjgwfQ.BxbHwfX9-XL7Y9AvGZMgf55fUE5EbuoPWkG3YbfYVgY',
-  //     // 'Access-Control-Allow-Origin':'*',
-  //     // 'Access-Control-Allow-Methods':'PUT, POST, GET, DELETE, OPTIONS',
-  //     // 'Access-Control-Allow-Headers':'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild',
-  //     'Content-Type': 'application/json',
-  //   },
-  //
-  //   success: function (res) {
-  //     console.log(res, 'res151')
-  //   },
-  //   error: function (error) {
-  //     console.log(error, 'error154')
-  //   }
-  // }).done(function (result) {
-  //
-  // }),'log201');
+  // 返回jqXHR对象，里面包含done，fail方法
+  // .done()的话，也是返回的同样的jqXHR对象
+  console.log($.ajax({
+    url: url,
+    type: 'get',
+    data: data,
+    dataType: 'json',
+    //是否异步
+    async: true,
+    //===解决跨域===
+    // xhrFields: {
+    // withCredentials: true
+    // },
+    // crossDomain: true,
+    //============
+    headers: {
+      'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImxvY2FsX2RldiIsImVtYWlsIjoiY29uZy5qaWFAZnVzaW9udHJlZS5jbiIsImlhdCI6MTU1NzIxMDI4MCwiZXhwIjoxNTg4NzQ2MjgwfQ.BxbHwfX9-XL7Y9AvGZMgf55fUE5EbuoPWkG3YbfYVgY',
+      // 'Access-Control-Allow-Origin':'*',
+      // 'Access-Control-Allow-Methods':'PUT, POST, GET, DELETE, OPTIONS',
+      // 'Access-Control-Allow-Headers':'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild',
+      'Content-Type': 'application/json',
+    },
 
-
-  let prefilters = {};
-  let addToPrefiltersOrTransports = function(prefilters) {
-
-    return function(func) {
-      prefilters['*'] = func;
+    success: function (res) {
+      console.log(res, 'res151')
+    },
+    error: function (error) {
+      console.log(error, 'error154')
     }
-  }
-  let ajaxPrefilter = addToPrefiltersOrTransports(prefilters)
+  }).done(function (result) {
 
-  ajaxPrefilter(function(options) {
-    return {
-      send: function() {
+  }),'log201');
 
-      },
-      callback: function() {
 
-      }
-    }
-  })
 
 
 

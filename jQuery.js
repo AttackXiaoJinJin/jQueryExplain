@@ -3420,10 +3420,10 @@
     // Convert options from String-formatted to Object-formatted if needed
     // (we check in cache first)
     options = typeof options === "string" ?
+      //options: {once:true,memory:true}
       createOptions( options ) :
       jQuery.extend( {}, options );
 
-    //options: {once:true,memory:true}
     //用来知道list是否正被调用
     var // Flag to know if list is currently firing
       firing,
@@ -3445,11 +3445,12 @@
 
       // Index of currently firing callback (modified by add/remove as needed)
       firingIndex = -1,
-      //触发的回调函数
+      //触发list中的回调函数
       // Fire callbacks
       fire = function() {
         //true
         // Enforce single-firing
+        //'once memory'中的'once'只允许触发一次
         locked = locked || options.once;
 
         // Execute callbacks for all pending executions,
@@ -3461,6 +3462,9 @@
           while ( ++firingIndex < list.length ) {
 
             // Run callback and check for early termination
+            //memory=[document, Array(1)]
+            //memory[0]是document
+            //意思就是让document去执行add()方法中添加的callback函数
             if ( list[ firingIndex ].apply( memory[ 0 ], memory[ 1 ] ) === false &&
               options.stopOnFalse ) {
 
@@ -3479,6 +3483,7 @@
         firing = false;
 
         // Clean up if we're done firing for good
+        //如果once:true，清空list数组
         if ( locked ) {
 
           // Keep an empty list if we have data for future add calls
@@ -3494,7 +3499,7 @@
 
       // Actual Callbacks object
       self = {
-
+        //添加一个回调函数或者是一个回调函数的集合
         // Add a callback or a collection of callbacks to the list
         add: function() {
           if ( list ) {
@@ -3504,10 +3509,12 @@
               firingIndex = list.length - 1;
               queue.push( memory );
             }
-
+            //闭包
             ( function add( args ) {
               jQuery.each( args, function( _, arg ) {
+                //function(){dataPriv.remove( elem, [ type + "queue", key ] ) }
                 if ( isFunction( arg ) ) {
+                  //如果self对象没有该方法，将其push进list中
                   if ( !options.unique || !self.has( arg ) ) {
                     list.push( arg );
                   }
@@ -3608,7 +3615,7 @@
           return !!fired;
         }
       };
-
+    console.log(queue,'queue3614')
     return self;
   };
   //===========Callbacks end================
@@ -4591,39 +4598,57 @@
     }
   } );
 
-
+  //源码4594行
   jQuery.extend( {
+    //作用：把callback依次存入目标元素的queue中，或者取出queue
+    //源码4596行
+    //elem 目标元素
+    //$("#A"),"type",function(){xxx}
     queue: function( elem, type, data ) {
       var queue;
 
       if ( elem ) {
+        //typequeue
         type = ( type || "fx" ) + "queue";
+        //从数据缓存中获取typequeue队列，如果没有则为undefined
         queue = dataPriv.get( elem, type );
-
         // Speed up dequeue by getting out quickly if this is just a lookup
         if ( data ) {
+          //如果queue不存在，或者data是Array的话
+          //就创建queue，queue=[data1,data2,...]
           if ( !queue || Array.isArray( data ) ) {
             queue = dataPriv.access( elem, type, jQuery.makeArray( data ) );
-          } else {
+          }
+          //queue存在的话，就把data push进去
+          else {
             queue.push( data );
           }
         }
+        console.log(queue,'queue4627')
+        //queue=[a,b]
         return queue || [];
       }
     },
-
+    //源码4624行
+    //目标元素，'type'
     dequeue: function( elem, type ) {
+      //'type'
       type = type || "fx";
-
+      //get，获取目标元素的队列
       var queue = jQuery.queue( elem, type ),
+        //长度
         startLength = queue.length,
+        //去除对首元素，并返回该元素
         fn = queue.shift(),
+        //确保该队列有一个hooks
         hooks = jQuery._queueHooks( elem, type ),
+        //next相当于dequeue的触发器
         next = function() {
           jQuery.dequeue( elem, type );
         };
 
       // If the fx queue is dequeued, always remove the progress sentinel
+      //如果fn='inprogress'，说明是fx动画队列正在出队，就移除inprogress
       if ( fn === "inprogress" ) {
         fn = queue.shift();
         startLength--;
@@ -4633,23 +4658,37 @@
 
         // Add a progress sentinel to prevent the fx queue from being
         // automatically dequeued
+        //如果是fx动画队列的话，就添加inprogress标志，来防止自动出队执行
+        //意思应该是等上一个动画执行完毕后，再执行下一个动画
         if ( type === "fx" ) {
           queue.unshift( "inprogress" );
         }
 
         // Clear up the last queue stop function
+        //删除hooks的stop属性方法
         delete hooks.stop;
+        //递归dequeue方法
         fn.call( elem, next, hooks );
       }
-
+      console.log(startLength,'startLength4669')
+      //如果队列是一个空数组，并且hooks存在的话，清除该队列
       if ( !startLength && hooks ) {
+        //进行队列清理
         hooks.empty.fire();
+        console.log(hooks.empty.fire(),'bbbb4671')
       }
     },
 
     // Not public - generate a queueHooks object, or return the current one
+    //jQuery内部方法，生成一个queueHooks对象或者返回当前值
+
+    //目标元素，"type"
+    //源码4676行
     _queueHooks: function( elem, type ) {
+      //typequeueHooks
       var key = type + "queueHooks";
+      //如果dataPriv已存在名称typequeueHooks的Hooks话，则直接返回该Hooks
+      //否则返回有empty属性的jQuery.Callback()方法生成的对象
       return dataPriv.get( elem, key ) || dataPriv.access( elem, key, {
         empty: jQuery.Callbacks( "once memory" ).add( function() {
           dataPriv.remove( elem, [ type + "queue", key ] );
@@ -4657,8 +4696,11 @@
       } );
     }
   } );
-
+  //源码4686行
   jQuery.fn.extend( {
+    //入队
+    //源码4663行
+    //'type', function(){xxx}
     queue: function( type, data ) {
       var setter = 2;
 
@@ -4667,24 +4709,37 @@
         type = "fx";
         setter--;
       }
-
+      //如果参数小于setter，就执行jQuery.queue()方法
+      /*这边就是getter*/
       if ( arguments.length < setter ) {
+        //this[0] 目标DOM元素
+        //type "type"
+        //返回[function a(){xxx},function b(){xxx}]
         return jQuery.queue( this[ 0 ], type );
       }
-
+      //如果data是undefined就返回jQuery对象
       return data === undefined ?
         this :
+        
         this.each( function() {
+          /*这边是setter*/
           var queue = jQuery.queue( this, type, data );
-
           // Ensure a hooks for this queue
+          //确保该队列有一个hooks
+          //返回{empty:{
+          // 里面是jQuery.Callbacks方法
+          // 其中add方法被改写
+          // }}
           jQuery._queueHooks( this, type );
-
+          /*专门为fx动画做处理*/
           if ( type === "fx" && queue[ 0 ] !== "inprogress" ) {
             jQuery.dequeue( this, type );
           }
         } );
     },
+    //出队
+    //移出队头的函数并执行它
+    //源码4717行
     dequeue: function( type ) {
       return this.each( function() {
         jQuery.dequeue( this, type );
@@ -9973,6 +10028,7 @@
         //      add:function(){}
         //      remove:function(){}
         //      has:function(){}
+        //      xxx
         //}
         //回调队列callbacks
         //所有的回调队列，不管任何时候增加的回调保证只触发一次

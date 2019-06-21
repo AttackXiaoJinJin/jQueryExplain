@@ -7,13 +7,49 @@
 <body>
 <script src="jQuery.js"></script>
 
-<div id="A" style="background-color: deeppink">这是A</div>
+  <div id="A" style="background-color: deeppink">这是A</div>
 
 <script>
   //以滑动方式隐藏被选元素
-  $("#A").slideUp()
-    //逐渐改变被选元素的不透明度，从隐藏到可见（褪色效果）
-    // .fadeIn()
+  // $("#A").slideUp()
+  //   //逐渐改变被选元素的不透明度，从隐藏到可见（褪色效果）
+  //   .fadeIn()
+
+
+  // function showIt() {
+  //   let length=$("#A").queue("fx").length
+  //   console.log(length,'fx18');
+  //   if(!!length){
+  //     setTimeout(showIt, 100);
+  //   }
+  // }
+  // showIt() //1 0
+  // 在slideUp()运行前，将slideUp、fadeIn放进queue中
+  // 然后依次出队并运行，只有在前一个函数运行结束后，后一个函数才能出队运行
+
+  //queue
+  //既是setter，也是getter
+
+  function a(next,hooks) {
+    console.log('a',next,hooks,'a34')
+  }
+  function b() {
+    console.log('b','b37')
+  }
+
+  //将a、b方法存在类型为type的队列里
+  //jQuery.fn.queue 给jQuery对象$("A")
+  /*setter*/
+  $("#A").queue('type', a)
+  // $("#A").queue('type', b)
+  //取出在type队列中的方法的集合
+  /*getter*/
+  // $("#A").queue('type') //[a,b]
+
+  $("#A").dequeue('type') //'a','a34'
+  $("#A").dequeue('type') //'a','a34'
+  // $("#A").dequeue('type') //'b','b37'
+
 
 </script>
 </body>
