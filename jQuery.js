@@ -4609,6 +4609,9 @@
     //源码4596行
     //elem 目标元素
     //$("#A"),"type",function(){xxx}
+
+    //type : optall.queue:"fx"
+    //data : doAnimation:function(){}
     queue: function( elem, type, data ) {
       var queue;
 
@@ -4626,11 +4629,15 @@
           }
           //queue存在的话，就把data push进去
           else {
+            //data即 doAnimation方法
             queue.push( data );
           }
         }
-        console.log(queue,'queue4627')
         //queue=[a,b]
+
+        //fx动画的话，比如[a,b]
+        //在运行a的同时，会在队首加上一个锁inprogress，防止下个动画提前执行
+        // （因为动画是异步的，锁的目的是在一个异步序列中保持序列中多个动画的同步）
         return queue || [];
       }
     },
@@ -4706,6 +4713,11 @@
     //入队
     //源码4663行
     //'type', function(){xxx}
+
+    //optall.queue:"fx"
+    //doAnimation:function(){}
+
+    //fx动画的话，就执行dequeue()，也就是队首callback函数
     queue: function( type, data ) {
       var setter = 2;
 
@@ -4728,6 +4740,7 @@
         
         this.each( function() {
           /*这边是setter*/
+          //返回的是数组[doAnimate,doAnimate,xxx]
           var queue = jQuery.queue( this, type, data );
           // Ensure a hooks for this queue
           //确保该队列有一个hooks
@@ -4735,8 +4748,11 @@
           // 里面是jQuery.Callbacks方法
           // 其中add方法被改写
           // }}
+
+          //初始化hooks
           jQuery._queueHooks( this, type );
           /*专门为fx动画做处理*/
+          //如果队首没有锁的话，直接运行队首元素
           if ( type === "fx" && queue[ 0 ] !== "inprogress" ) {
             jQuery.dequeue( this, type );
           }
@@ -7939,19 +7955,24 @@
   }
   //源码7844行
   //elem:目标元素
-  //properties:{height: "hide",marginBottom: "hide",
-  //           marginTop: "hide",paddingBottom: "hide",paddingTop: "hide}
-  //options:{complete:false,duration: 400,easing: undefined,
-  //           old: false,queue: "fx"}
+
+  //this:目标元素
+  //{'width': '500'}
+  //optall={xxx}
   function Animation( elem, properties, options ) {
-    console.log(elem, properties, options,'7847options')
-    
+
     
     var result,
       stopped,
       index = 0,
       //1
       length = Animation.prefilters.length,
+      //{
+      // always:function(){},
+      // catch:function(){},
+      // done:function(){},
+      // xxx
+      // }
       deferred = jQuery.Deferred().always( function() {
 
         // Don't match elem in the :animated selector
@@ -8074,6 +8095,7 @@
 
     return animation;
   }
+  //===========Animation end============
 
   jQuery.Animation = jQuery.extend( Animation, {
 
@@ -8117,23 +8139,26 @@
   } );
   //源码8009行
   //undefiend undefined undefined
+
+  //作用是返回一个经过修改的opt对象
   jQuery.speed = function( speed, easing, fn ) {
     // opt={
     //   complete:false,
-    //   duration: 400,
+    //   duration: undefined,
     //   easing: undefined,
-    //   old: false,
-    //   queue: "fx",
     // }
-    
+
     var opt = speed && typeof speed === "object" ? jQuery.extend( {}, speed ) : {
       complete: fn || !fn && easing ||
         isFunction( speed ) && speed,
       duration: speed,
       easing: fn && easing || easing && !isFunction( easing ) && easing
     };
-
+    
     // Go to the end state if fx are off
+    /*这边是为opt.duration赋值的*/
+
+    //undefiend
     if ( jQuery.fx.off ) {
       opt.duration = 0;
 
@@ -8143,17 +8168,21 @@
           opt.duration = jQuery.fx.speeds[ opt.duration ];
 
         } else {
+          //走这边
+          //_default=400
           opt.duration = jQuery.fx.speeds._default;
         }
       }
     }
-
+    /*为opt.queue赋值*/
     // Normalize opt.queue - true/undefined/null -> "fx"
+    //注意这个==，是模糊判断
     if ( opt.queue == null || opt.queue === true ) {
       opt.queue = "fx";
     }
 
     // Queueing
+    /*为opt.old赋值*/
     opt.old = opt.complete;
 
     opt.complete = function() {
@@ -8161,11 +8190,21 @@
         opt.old.call( this );
       }
       //如果queue有值得话，就出队列
+      //因为queue默认为"fx"，所以一般会触发dequeue操作
       if ( opt.queue ) {
+        //this指目标元素
+        //opt.queue
         jQuery.dequeue( this, opt.queue );
       }
     };
-
+    //此时的opt为：
+    // opt={
+    //   complete:function(){jQuery.dequeue()},
+    //   old:false,
+    //   duration: 400,
+    //   easing: undefined,
+    //   queue:"fx",
+    // }
     return opt;
   };
 
@@ -8179,32 +8218,48 @@
         .end().animate( { opacity: to }, speed, easing, callback );
     },
     //源码8062行
+    //{'width': '500'}
     animate: function( prop, speed, easing, callback ) {
       //是否是空对象，false
       var empty = jQuery.isEmptyObject( prop ),
-        // opt={
-        //   complete:false,
+        // optall={
+        //   complete:function(){jQuery.dequeue()},
+        //   old:false,
         //   duration: 400,
         //   easing: undefined,
-        //   old: false,
-        //   queue: "fx",
+        //   queue:"fx",
         // }
-        optall = jQuery.speed( speed, easing, callback ),
         
+        //undefined undefined undefined
+        optall = jQuery.speed( speed, easing, callback ),
+
         doAnimation = function() {
          
           // Operate on a copy of prop so per-property easing won't be lost
+          //Animation 方法执行单个动画的封装
+          //doAnimation的本质是执行Animation方法
+
+          //this:目标元素
+          //{'width': '500'}
+          //optall={xxx}
           var anim = Animation( this, jQuery.extend( {}, prop ), optall );
 
           // Empty animations, or finishing resolves immediately
+          //finish是数据缓存的一个全局变量，当动画终止时，执行stop函数
           if ( empty || dataPriv.get( this, "finish" ) ) {
             anim.stop( true );
           }
         };
+      //注意这个
+      //自身的.finish=自身
       doAnimation.finish = doAnimation;
 
       return empty || optall.queue === false ?
         this.each( doAnimation ) :
+        //一般走这里
+        //通过 queue 调度动画之间的衔接
+        //optall.queue:"fx"
+        //doAnimation:function(){}
         this.queue( optall.queue, doAnimation );
     },
 
@@ -8376,7 +8431,8 @@
   jQuery.fx.stop = function() {
     inProgress = null;
   };
-
+  //源码8385行
+  //默认400毫秒
   jQuery.fx.speeds = {
     slow: 600,
     fast: 200,
