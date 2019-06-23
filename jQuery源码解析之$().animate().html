@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery源码解析之$().animate()</title>
+</head>
+<body>
+<script src="jQuery.js"></script>
+
+  <div id="A" style="width:100px;height:50px;background-color: deeppink">这是A</div>
+
+<script>
+  let A = document.querySelector('#A');
+  //在异步调用中，进行同步调用
+  //动画是异步的
+  A.onclick = function() {
+    //就是连续调用animation.add()
+    $('#A').animate({
+      'width': '500'
+    }).animate({
+      'width': '300'
+    }).animate({
+      'width': '1000'
+    });
+  };
+</script>
+</body>
+</html>

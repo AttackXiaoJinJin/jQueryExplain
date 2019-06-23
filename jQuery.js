@@ -726,6 +726,8 @@
         rnative = /^[^{]+\{\s*\[native \w/,
 
         // Easily-parseable/retrievable ID or TAG or CLASS selectors
+        //选择器:快速匹配id-#A,tag-div,class-.a
+        //源码730行
         rquickExpr = /^(?:#([\w-]+)|(\w+)|\.([\w-]+))$/,
 
         rsibling = /[+~]/,
@@ -3510,9 +3512,10 @@
               queue.push( memory );
             }
             //闭包
+            //将arguments作为参数即args传入闭包的add方法中
             ( function add( args ) {
+              //args[0]即function(){dataPriv.remove( elem, [ type + "queue", key ] ) }
               jQuery.each( args, function( _, arg ) {
-                //function(){dataPriv.remove( elem, [ type + "queue", key ] ) }
                 if ( isFunction( arg ) ) {
                   //如果self对象没有该方法，将其push进list中
                   if ( !options.unique || !self.has( arg ) ) {
@@ -3525,11 +3528,13 @@
                 }
               } );
             } )( arguments );
-
+            //undefined undefined
             if ( memory && !firing ) {
               fire();
             }
           }
+          //this即self对象
+          //也就说在调用self对象内的方法后会返回self对象本身
           return this;
         },
 
@@ -8075,6 +8080,7 @@
     tweeners: {
       "*": [ function( prop, value ) {
         var tween = this.createTween( prop, value );
+        console.log('vvvv','aaa8083')
         adjustCSS( tween.elem, prop, rcssNum.exec( value ), tween );
         return tween;
       } ]

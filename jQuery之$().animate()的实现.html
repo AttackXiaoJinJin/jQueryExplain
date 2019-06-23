@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>jQuery之$().animate()的实现</title>
+</head>
+<body>
+
+  <div id="A" style="width:100px;height:50px;background-color: deeppink">这是A</div>
+
+<script>
+  // (function(a){
+  //   console.log(a) //name
+  // })('name')
+  //
+  // (function (b) {
+  //   console.log(b) //function(){console.log('name')}
+  // })(function () {
+  //   console.log('name')
+  // })
+  
+  
+  //匿名函数自调用，下面好长好长的function就是$
+  //也就是说$是一个function(){xxx}
+  (function($) {
+
+    window.$ = $;
+
+  })(
+    //这里也是匿名函数自调用
+    //本质就是经过一系列操作得到chenQuery并作为参数$，赋值给window.$
+    function() {
+    //匹配ID
+    let rquickExpr = /^(?:#([\w-]*))$/;
+    //jQuery初始化
+    function chenQuery(selector) {
+      return new chenQuery.fn.init(selector);
+    }
+
+    /**
+     * 动画
+     * @return {[type]} [description]
+     */
+    let animation = function() {
+      let self = {};
+      let Queue = []; //动画队列
+      let fireing = false //动画锁
+      let first = true; //通过add接口触发
+
+      let makeAnim = function(element, options, func) {
+        let width = options.width
+        //这里面定义了动画的算法
+        //默认动画时长2s
+        element.style.transitionDuration = '1000ms';
+        element.style.width =  width + 'px';
+
+        //监听动画完结
+        //重要，解锁
+        element.addEventListener('webkitTransitionEnd', function() {
+          func()
+        });
+      }
+      //========fire===========
+      let _fire = function() {
+        //加入动画正在触发
+        //如果动画没有"正在执行（inprogress）"的话
+        if (!fireing) {
+          let fn = Queue.shift();
+
+          if (fn) {
+            //执行动画的锁
+            fireing = true;
+            //next
+            //执行队首元素
+            //onceRun的参数就是形参func,
+            //用来通知动画执行结束，并继续执行下一个动画
+            fn(function() {
+              fireing = false;
+              _fire();
+            });
+          } else {
+            fireing = true;
+          }
+        }
+      }
+      //========fire end======
+
+      //=======self=========
+      //这里就是jQuery.Callbacks()的方法的简化版
+      return self = {
+        //增加队列
+        //element 目标元素
+        //options
+        add: function(element, options) {
+          //向动画队列中添加 makeAnim触发器
+          Queue.push(function(func) {
+            makeAnim(element, options, func);
+            // makeAnim(element, options,);
+          });
+
+          //如果队列内有触发器，就立刻触发动画
+          //就是每push进一个callback，就去触发Queue中的callback
+          if (first && Queue.length) {
+            //在执行Queue中的callback函数时，需要设为false
+            //以防止上个动画还未完成，就执行下个动画了
+            first = false;
+            self.fire();
+          }
+        },
+        //触发动画
+        //执行_fire触发器
+        fire: function() {
+          _fire();
+        }
+      }
+      //=======self end======
+    }();
+    //为chenQuery的fn和prototype原型属性 赋 animate属性
+    chenQuery.fn = chenQuery.prototype = {
+      //animate方法本质是调用animation.add方法
+      //这样又封装一层的目的是因为animation是chenQuery的内部方法
+      //不直接暴露给开发者使用
+      animate: function(options) {
+        animation.add(this.element, options);
+        //注意返回的是this,也就是$("#A"),这样就能继续调用animate方法
+        // 也就是链式调用
+        return this;
+      }
+    }
+    //为chenQuery的fn属性添加init方法
+    let init = chenQuery.fn.init = function(selector) {
+      // ["#A", "A",groups: undefined,index: 0,input: "#A"]
+      let match = rquickExpr.exec(selector);
+      //这边默认是只找id的元素
+      let element = document.getElementById(match[1])
+      //this指chenQuery.fn.init方法
+      //为该方法添加element属性
+      this.element = element;
+      //返回chenQuery.fn.init
+      return this;
+    }
+    //挺绕的，再将init的原型等于chenQuery.fn方法
+    init.prototype = chenQuery.fn;
+
+      //chenQuery本身是一个function(){}
+      // chenQuery{
+           //init能调用fn，fn能调用init
+      //   fn:{
+      //     animate:function(){},
+      //     init:function(){},
+      //     // init.prototype=fn
+      //   },
+      //   prototype:{
+      //     animate:function(){},
+      //   }
+      // }
+
+    return chenQuery;
+  }());
+
+
+  //==============================
+  let A = document.querySelector('#A');
+  //在异步调用中，进行同步调用
+  //动画是异步的
+  A.onclick = function() {
+    //就是连续调用animation.add()
+    $('#A').animate({
+      'width': '500'
+    }).animate({
+      'width': '300'
+    }).animate({
+      'width': '1000'
+    });
+  };
+
+
+
+</script>
+</body>
+</html>
