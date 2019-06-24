@@ -521,12 +521,15 @@
     },
 
     // arg is for internal usage only
+    //源码524行
+    //props, createTween, animation
     map: function( elems, callback, arg ) {
       var length, value,
         i = 0,
         ret = [];
 
       // Go through the array, translating each of the items to their new values
+      //如果elems是类数组的话
       if ( isArrayLike( elems ) ) {
         length = elems.length;
         for ( ; i < length; i++ ) {
@@ -539,7 +542,10 @@
 
         // Go through every key on the object,
       } else {
+        //走这边
         for ( i in elems ) {
+          //500 width animation
+          /*执行动画*/
           value = callback( elems[ i ], i, arg );
 
           if ( value != null ) {
@@ -547,8 +553,9 @@
           }
         }
       }
-
+      console.log(ret,'ret555')
       // Flatten any nested arrays
+      // 展平任何嵌套数组
       return concat.apply( [], ret );
     },
 
@@ -7559,6 +7566,9 @@
 
 
   function Tween( elem, options, prop, end, easing ) {
+    //width 500 swing
+    //width 300 swing
+    //width 1000 swing
     return new Tween.prototype.init( elem, options, prop, end, easing );
   }
   jQuery.Tween = Tween;
@@ -7576,7 +7586,7 @@
     },
     cur: function() {
       var hooks = Tween.propHooks[ this.prop ];
-
+      //undefined undefined
       return hooks && hooks.get ?
         hooks.get( this ) :
         Tween.propHooks._default.get( this );
@@ -7626,6 +7636,7 @@
         // Simple values such as "10px" are parsed to Float;
         // complex values such as "rotate(1rad)" are returned as-is.
         result = jQuery.css( tween.elem, tween.prop, "" );
+        // console.log(tween.prop,result,'prop7638')
 
         // Empty strings, null, undefined and "auto" are converted to 0.
         return !result || result === "auto" ? 0 : result;
@@ -7680,15 +7691,21 @@
     fxNow, inProgress,
     rfxtypes = /^(?:toggle|show|hide)$/,
     rrun = /queueHooks$/;
-
+  
   function schedule() {
+    //inProgress是判断整个动画流程是否结束的标志
+    //当inProgress=null时，整个动画结束
     if ( inProgress ) {
+      //走这边
       if ( document.hidden === false && window.requestAnimationFrame ) {
+        //使用requestAnimationFrame来完成动画
+        //递归
         window.requestAnimationFrame( schedule );
       } else {
+        //由于js是单线程的，所以13ms是保证执行完动画的合适的值
         window.setTimeout( schedule, jQuery.fx.interval );
       }
-
+      /*执行动画*/
       jQuery.fx.tick();
     }
   }
@@ -7731,6 +7748,8 @@
     return attrs;
   }
 
+  //源码7734行
+  //创建动画对象
   function createTween( value, prop, animation ) {
     var tween,
       collection = ( Animation.tweeners[ prop ] || [] ).concat( Animation.tweeners[ "*" ] ),
@@ -7916,7 +7935,8 @@
       }
     }
   }
-
+  //源码7919行
+  //数据处理
   function propFilter( props, specialEasing ) {
     var index, name, easing, value, hooks;
 
@@ -7958,7 +7978,13 @@
 
   //this:目标元素
   //{'width': '500'}
-  //optall={xxx}
+  // optall={
+  //   complete:function(){jQuery.dequeue()},
+  //   old:false,
+  //   duration: 400,
+  //   easing: undefined,
+  //   queue:"fx",
+  // }
   function Animation( elem, properties, options ) {
 
     
@@ -7973,6 +7999,9 @@
       // done:function(){},
       // xxx
       // }
+
+      //初始化deferred对象
+      //deferred.always()表示不管成功还是失败，最终都会运行内部设置的代码
       deferred = jQuery.Deferred().always( function() {
 
         // Don't match elem in the :animated selector
@@ -8013,7 +8042,8 @@
         deferred.resolveWith( elem, [ animation ] );
         return false;
       },
-      
+      //==========tick end==========
+      //让animation带有promise的属性，并在其中添加动画的属性和方法
       animation = deferred.promise( {
         elem: elem,
         props: jQuery.extend( {}, properties ),
@@ -8026,10 +8056,22 @@
         startTime: fxNow || createFxNow(),
         duration: options.duration,
         tweens: [],
+        //500,'width',animation
         createTween: function( prop, end ) {
           var tween = jQuery.Tween( elem, animation.opts, prop, end,
             animation.opts.specialEasing[ prop ] || animation.opts.easing );
           animation.tweens.push( tween );
+          // {
+          //   easing: "swing"
+          //   elem: div#A
+          //   end: 500
+          //   now: 500
+          //   options: {specialEasing: {…}, easing: "swing", complete: ƒ, duration: 400, queue: "fx", …}
+          //   pos: 1
+          //   prop: "width"
+          //   start: 100
+          //   unit: "px"
+          // }
           return tween;
         },
         stop: function( gotoEnd ) {
@@ -8056,9 +8098,9 @@
           return this;
         }
       } ),
-      
+      //===========animation end===============
       props = animation.props;
-
+    //{width:500},undefined
     propFilter( props, animation.opts.specialEasing );
 
     for ( ; index < length; index++ ) {
@@ -8071,7 +8113,8 @@
         return result;
       }
     }
-
+    /*运行动画*/
+    // createTween(500,'width',animation)
     jQuery.map( props, createTween, animation );
 
     if ( isFunction( animation.opts.start ) ) {
@@ -8389,7 +8432,7 @@
       return this.animate( props, speed, easing, callback );
     };
   } );
-
+  //源码8431行
   jQuery.timers = [];
   jQuery.fx.tick = function() {
     var timer,
@@ -8397,11 +8440,12 @@
       timers = jQuery.timers;
 
     fxNow = Date.now();
-
+    //这里的timers，就是Animation.tick()的集合
     for ( ; i < timers.length; i++ ) {
       timer = timers[ i ];
 
       // Run the timer and safely remove it when done (allowing for external removal)
+      //运行Animation.tick()并安全地移除它
       if ( !timer() && timers[ i ] === timer ) {
         timers.splice( i--, 1 );
       }
@@ -8414,20 +8458,26 @@
   };
 
   jQuery.fx.timer = function( timer ) {
+    //将Animation.tick()依次放进jQuery.timers数组中
     jQuery.timers.push( timer );
+    console.log(jQuery.timers,'timers8463')
+    //每push进一个，就运行一个
     jQuery.fx.start();
   };
-
+  //13代表动画每秒运行的帧数，也正好是浏览器刷新屏幕的频率
   jQuery.fx.interval = 13;
+  //加锁，运行动画
   jQuery.fx.start = function() {
     if ( inProgress ) {
       return;
     }
-
+    //动画开始即为运行中，加上锁
     inProgress = true;
+    //运行
     schedule();
   };
-
+  //源码8474行
+  //结束整个动画流程
   jQuery.fx.stop = function() {
     inProgress = null;
   };
