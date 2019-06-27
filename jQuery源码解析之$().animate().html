@@ -16,13 +16,22 @@
   A.onclick = function() {
     //就是连续调用animation.add()
     $('#A').animate({
-      'width': '500'
-    }).animate({
-      'width': '300'
-    }).animate({
-      'width': '1000'
-    });
+      'width': '500',
+    },
+      // 400,
+    ).animate({
+      'width': '300',
+    },
+      // 400,
+    ).animate({
+      'width': '1000',
+    },
+      // 400,
+    );
   };
+
+
+
 </script>
 </body>
 </html>

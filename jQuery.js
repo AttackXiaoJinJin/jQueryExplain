@@ -553,7 +553,6 @@
           }
         }
       }
-      console.log(ret,'ret555')
       // Flatten any nested arrays
       // 展平任何嵌套数组
       return concat.apply( [], ret );
@@ -3966,6 +3965,7 @@
       } );
 
       // Make the deferred a promise
+      //将promise的属性加入到deferred中
       promise.promise( deferred );
 
       // Call given func if any
@@ -4680,8 +4680,10 @@
         //如果是fx动画队列的话，就添加inprogress标志，来防止自动出队执行
         //意思应该是等上一个动画执行完毕后，再执行下一个动画
         if ( type === "fx" ) {
+
           queue.unshift( "inprogress" );
         }
+        console.log(queue,'next4666')
 
         // Clear up the last queue stop function
         //删除hooks的stop属性方法
@@ -4694,7 +4696,6 @@
       if ( !startLength && hooks ) {
         //进行队列清理
         hooks.empty.fire();
-        console.log(hooks.empty.fire(),'bbbb4671')
       }
     },
 
@@ -4755,7 +4756,7 @@
           // 里面是jQuery.Callbacks方法
           // 其中add方法被改写
           // }}
-
+          console.log(queue,'queue4758')
           //初始化hooks
           jQuery._queueHooks( this, type );
           /*专门为fx动画做处理*/
@@ -7276,6 +7277,7 @@
     cssProps: {},
 
     // Get and set the style property on a DOM Node
+    //源码7279行
     style: function( elem, name, value, extra ) {
 
       // Don't set styles on text and comment nodes
@@ -7306,7 +7308,6 @@
         // Convert "+=" or "-=" to relative numbers (#7345)
         if ( type === "string" && ( ret = rcssNum.exec( value ) ) && ret[ 1 ] ) {
           value = adjustCSS( elem, name, ret );
-
           // Fixes bug #9237
           type = "number";
         }
@@ -7333,6 +7334,7 @@
           if ( isCustomProp ) {
             style.setProperty( name, value );
           } else {
+            //走这边=============
             style[ name ] = value;
           }
         }
@@ -7564,7 +7566,7 @@
     }
   } );
 
-
+  //源码7568行
   function Tween( elem, options, prop, end, easing ) {
     //width 500 swing
     //width 300 swing
@@ -7592,16 +7594,31 @@
         Tween.propHooks._default.get( this );
     },
     run: function( percent ) {
+      // {
+      //   easing: "swing"
+      //   elem: div#A
+      //   end: 500
+      //   now: 105.52601592046467
+      //   options: {specialEasing: {…}, easing: "swing", complete: ƒ, duration: 400, queue: "fx", …}
+      //   pos: 1
+      //   prop: "width"
+      //   start: 100
+      //   unit: "px"
+      // }
       var eased,
+        //undefiend
         hooks = Tween.propHooks[ this.prop ];
-
+      //400
       if ( this.options.duration ) {
+        //swing,两边慢中间快
+        //动画效果
         this.pos = eased = jQuery.easing[ this.easing ](
           percent, this.options.duration * percent, 0, 1, this.options.duration
         );
       } else {
         this.pos = eased = percent;
       }
+      //width的宽度
       this.now = ( this.end - this.start ) * eased + this.start;
 
       if ( this.options.step ) {
@@ -7611,6 +7628,8 @@
       if ( hooks && hooks.set ) {
         hooks.set( this );
       } else {
+        //走这边
+        //执行style变化
         Tween.propHooks._default.set( this );
       }
       return this;
@@ -7641,16 +7660,19 @@
         // Empty strings, null, undefined and "auto" are converted to 0.
         return !result || result === "auto" ? 0 : result;
       },
-      set: function( tween ) {
-
+      //源码7661行
+      set: function( tween ) {  
         // Use step hook for back compat.
         // Use cssHook if its there.
         // Use .style if available and use plain properties where available.
+        //undefined
         if ( jQuery.fx.step[ tween.prop ] ) {
           jQuery.fx.step[ tween.prop ]( tween );
         } else if ( tween.elem.nodeType === 1 &&
           ( tween.elem.style[ jQuery.cssProps[ tween.prop ] ] != null ||
             jQuery.cssHooks[ tween.prop ] ) ) {
+          //走这边
+          //#A,width,100px(103px,134px,xxx)
           jQuery.style( tween.elem, tween.prop, tween.now + tween.unit );
         } else {
           tween.elem[ tween.prop ] = tween.now;
@@ -7691,7 +7713,8 @@
     fxNow, inProgress,
     rfxtypes = /^(?:toggle|show|hide)$/,
     rrun = /queueHooks$/;
-  
+  //源码7694行
+  //如果动画已经开始，那么就不断执行jQuery.fx.tick()方法（动画渲染）
   function schedule() {
     //inProgress是判断整个动画流程是否结束的标志
     //当inProgress=null时，整个动画结束
@@ -7700,6 +7723,7 @@
       if ( document.hidden === false && window.requestAnimationFrame ) {
         //使用requestAnimationFrame来完成动画
         //递归
+        // console.log('requestAnimationFrame','requestAnimationFrame7704')
         window.requestAnimationFrame( schedule );
       } else {
         //由于js是单线程的，所以13ms是保证执行完动画的合适的值
@@ -7748,14 +7772,25 @@
     return attrs;
   }
 
-  //源码7734行
+  //源码7752行
   //创建动画对象
+  // createTween(500,'width',animation)
   function createTween( value, prop, animation ) {
     var tween,
+      //[ function( prop, value ) {
+      //         var tween = this.createTween( prop, value );
+      //         console.log('vvvv','aaa8083')
+      //         adjustCSS( tween.elem, prop, rcssNum.exec( value ), tween );
+      //         return tween;
+      //       } ]
       collection = ( Animation.tweeners[ prop ] || [] ).concat( Animation.tweeners[ "*" ] ),
       index = 0,
+      //1
       length = collection.length;
     for ( ; index < length; index++ ) {
+      //prop:width
+      //value:500
+      //运行collection[ index ]，this绑定animation
       if ( ( tween = collection[ index ].call( animation, prop, value ) ) ) {
 
         // We're done with this property
@@ -7856,6 +7891,7 @@
       }
 
       // Animate inline elements as inline-block
+      //针对inline属性强制转化为inline-block属性
       if ( display === "inline" || display === "inline-block" && restoreDisplay != null ) {
         if ( jQuery.css( elem, "float" ) === "none" ) {
 
@@ -7873,7 +7909,7 @@
         }
       }
     }
-
+    //针对overflow属性的处理
     if ( opts.overflow ) {
       style.overflow = "hidden";
       anim.always( function() {
@@ -7973,6 +8009,7 @@
       }
     }
   }
+  //animate()核心方法
   //源码7844行
   //elem:目标元素
 
@@ -7985,8 +8022,8 @@
   //   easing: undefined,
   //   queue:"fx",
   // }
-  function Animation( elem, properties, options ) {
 
+  function Animation( elem, properties, options ) {
     
     var result,
       stopped,
@@ -8007,22 +8044,30 @@
         // Don't match elem in the :animated selector
         delete tick.elem;
       } ),
-      
+      //源码8026行
+      //根据动画的参数来执行动画
       tick = function() {
         if ( stopped ) {
           return false;
         }
+        //当前时间的时间戳
         var currentTime = fxNow || createFxNow(),
+          //动画时长默认400ms
+          //开始时间+动画时长-当前时间
+          //在每次调用requestAnimationFrame后，记录下剩下的的时间在总时间（duration）中的位置
           remaining = Math.max( 0, animation.startTime + animation.duration - currentTime ),
 
           // Support: Android 2.3 only
           // Archaic crash bug won't allow us to use `1 - ( 0.5 || 0 )` (#12497)
+          //剩下的时间占总时长的占比
           temp = remaining / animation.duration || 0,
+          //当前时间占总时长的占比
           percent = 1 - temp,
           index = 0,
           length = animation.tweens.length;
 
         for ( ; index < length; index++ ) {
+          //根据传入的动画参数和当前进程的百分比来运行动画
           animation.tweens[ index ].run( percent );
         }
 
@@ -8030,14 +8075,17 @@
 
         // If there's more to do, yield
         if ( percent < 1 && length ) {
+
           return remaining;
         }
 
         // If this was an empty animation, synthesize a final progress notification
         if ( !length ) {
+          console.log('tick','tick8049')
+
           deferred.notifyWith( elem, [ animation, 1, 0 ] );
         }
-
+        console.log('jquerytick','jquerytick8085')
         // Resolve the animation and report its conclusion
         deferred.resolveWith( elem, [ animation ] );
         return false;
@@ -8098,11 +8146,11 @@
           return this;
         }
       } ),
-      //===========animation end===============
       props = animation.props;
+
     //{width:500},undefined
     propFilter( props, animation.opts.specialEasing );
-
+    //如果有定义stop方法的话，绑定至animation上
     for ( ; index < length; index++ ) {
       result = Animation.prefilters[ index ].call( animation, elem, props, animation.opts );
       if ( result ) {
@@ -8129,6 +8177,7 @@
       .always( animation.opts.always );
 
     jQuery.fx.timer(
+      //让tick方法继承elem、anim和queue属性
       jQuery.extend( tick, {
         elem: elem,
         anim: animation,
@@ -8141,12 +8190,38 @@
   //===========Animation end============
 
   jQuery.Animation = jQuery.extend( Animation, {
-
+    //源码8152行
     tweeners: {
+      //prop:width
+      //value:500
       "*": [ function( prop, value ) {
+        //animation.createTween('width',500)
+        // {
+         //   easing: "swing"
+         //   elem: div#A
+         //   end: 500
+         //   now: 500
+         //   options: {specialEasing: {…}, easing: "swing", complete: ƒ, duration: 400, queue: "fx", …}
+         //   pos: 1
+         //   prop: "width"
+         //   start: 100
+         //   unit: "px"
+         // }
         var tween = this.createTween( prop, value );
-        console.log('vvvv','aaa8083')
+        // rcssNum.exec( value ):["1000",undefined,"1000","",groups: undefined, index: 0, input: "1000",]
         adjustCSS( tween.elem, prop, rcssNum.exec( value ), tween );
+
+        // {
+        //   easing: "swing"
+        //   elem: div#A
+        //   end: 500
+        //   now: 500
+        //   options: {specialEasing: {…}, easing: "swing", complete: ƒ, duration: 400, queue: "fx", …}
+        //   pos: 1
+        //   prop: "width"
+        //   start: 100
+        //   unit: "px"
+        // }
         return tween;
       } ]
     },
@@ -8169,6 +8244,7 @@
         Animation.tweeners[ prop ].unshift( callback );
       }
     },
+    //源码8175行
     //defaultPrefilter是一个function
     prefilters: [ defaultPrefilter ],
 
@@ -8277,7 +8353,7 @@
         optall = jQuery.speed( speed, easing, callback ),
 
         doAnimation = function() {
-         
+          console.log('doAnimation','doAnimation8355')
           // Operate on a copy of prop so per-property easing won't be lost
           //Animation 方法执行单个动画的封装
           //doAnimation的本质是执行Animation方法
@@ -8286,10 +8362,11 @@
           //{'width': '500'}
           //optall={xxx}
           var anim = Animation( this, jQuery.extend( {}, prop ), optall );
-
           // Empty animations, or finishing resolves immediately
-          //finish是数据缓存的一个全局变量，当动画终止时，执行stop函数
+          //finish是数据缓存的一个全局变量
+          //如果为true，立即终止动画
           if ( empty || dataPriv.get( this, "finish" ) ) {
+
             anim.stop( true );
           }
         };
@@ -8434,6 +8511,8 @@
   } );
   //源码8431行
   jQuery.timers = [];
+  //源码8483行
+  //运行Animation.tick()并安全地移除它
   jQuery.fx.tick = function() {
     var timer,
       i = 0,
@@ -8450,22 +8529,24 @@
         timers.splice( i--, 1 );
       }
     }
-
+    console.log(timers,timers.length,'timers8531')
+    //inProgress=null，停止动画
     if ( !timers.length ) {
       jQuery.fx.stop();
     }
     fxNow = undefined;
   };
-
+  //源码8504行
+  //单个动画内部执行
   jQuery.fx.timer = function( timer ) {
     //将Animation.tick()依次放进jQuery.timers数组中
     jQuery.timers.push( timer );
-    console.log(jQuery.timers,'timers8463')
     //每push进一个，就运行一个
     jQuery.fx.start();
   };
-  //13代表动画每秒运行的帧数，也正好是浏览器刷新屏幕的频率
+  //13代表动画每秒运行的帧数，也是浏览器刷新屏幕的频率
   jQuery.fx.interval = 13;
+  //源码8514行
   //加锁，运行动画
   jQuery.fx.start = function() {
     if ( inProgress ) {

@@ -50,16 +50,16 @@
 
       //创建动画缓动对象//
       function Tween(value, prop, animation) {
-        this.elem    = animation.elem;
-        this.prop    = prop;
-        this.easing  = "swing"; //动画缓动算法
-        this.options = animation.options;
+        this.elem=animation.elem;
+        this.prop=prop;
+        this.easing= "swing"; //动画缓动算法
+        this.options=animation.options;
         //获取初始值
-        this.start   = this.now = this.get();
+        this.start=this.now = this.get();
         //动画最终值
-        this.end     = value;
+        this.end= value;
         //单位
-        this.unit    = "px"
+        this.unit="px"
       }
 
       Tween.prototype = {
@@ -84,43 +84,44 @@
 
       //创建开始时间
       function createFxNow() {
-        console.log('aaaa','bbbb126')
         setTimeout(function() {
           Animation.fxNow = undefined;
         });
         return (Animation.fxNow = Date.now());
       }
+
       let inProgress
       function schedule() {
         //inProgress是判断整个动画流程是否结束的标志
         //当inProgress=null时，整个动画结束
         if ( inProgress ) {
           //走这边
-            //使用requestAnimationFrame来完成动画
-            //递归
-            window.requestAnimationFrame( schedule );
+          //使用requestAnimationFrame来完成动画
+          //递归
+          window.requestAnimationFrame( schedule );
           /*执行动画*/
           Animation.fx.tick();
         }
+
       }
 
 
-      //动画类 //
-      function Animation(elem, properties, options){
+      // 动画类
+      // element, options, optall,func
+      function Animation(elem, options, optall,func,){
         //动画对象
         let animation = {
-          elem            : elem,
-          props           : properties,
-          originalOptions : options,
-          options         : options,
-          startTime       : Animation.fxNow || createFxNow(),//动画开始时间
-          tweens          : [] //存放每个属性的缓动对象，用于动画
+          elem:elem,
+          props:options,
+          originalOptions:optall,
+          options:optall,
+          startTime:Animation.fxNow || createFxNow(),//动画开始时间
+          tweens:[] //存放每个属性的缓动对象，用于动画
         }
-
         //生成属性对应的动画算法对象
-        for (let k in properties) {
+        for (let k in options) {
           // tweens保存每一个属性对应的缓动控制对象
-          animation.tweens.push( new Tween(properties[k], k, animation) )
+          animation.tweens.push( new Tween(options[k], k, animation) )
         }
 
         //动画状态
@@ -139,44 +140,47 @@
 
           let index = 0,
             length = animation.tweens.length;
-
           //执行动画改变
           for (; index < length; index++) {
             //percent改变值
             animation.tweens[index].run(percent);
           }
+          //当进度不到100%时，继续绘制动画
+          if (percent < 1 && length) {
 
-          //是否继续，还是停止
-          if (percent <= 1 && length) {
             return remaining;
-          } else {
-            //停止
-            return false;
           }
 
+
+          tick.complete()
+          return false
         }
         tick.elem = elem;
         tick.anim = animation
+        tick.complete = func
+
         Animation.fx.timer(tick)
       }
 
-      //用于定时器调用
+      //用于requestAnimationFrame调用
       Animation.timers =[]
 
       Animation.fx = {
         //开始动画队列
-        timer: function(timer) {
+        //Animation.tick()
+        timer: function(timer,) {
           Animation.timers.push(timer);
-          console.log(Animation.timers,'timers158')
           if (timer()) {
             //开始执行动画
             Animation.fx.start();
-          } else {
-            Animation.timers.pop();
+          // func()
           }
+            // else {
+          //   Animation.timers.pop();
+          // }
         },
         //开始循环
-        start: function() {
+        start: function(func) {
           if ( inProgress ) {
             return;
           }
@@ -184,8 +188,7 @@
           inProgress = true;
           //运行
           schedule();
-
-
+          // func()
         },
         //停止循环
         stop:function(){
@@ -198,15 +201,17 @@
             timers = Animation.timers;
 
           Animation.fxNow = Date.now();
-
           for (; i < timers.length; i++) {
             timer = timers[i];
+
             if (!timer() && timers[i] === timer) {
+
               //如果完成了就删除这个动画
               timers.splice(i--, 1);
+              console.log(timers,'timer207')
+
             }
           }
-
           if (!timers.length) {
             Animation.fx.stop();
           }
@@ -215,62 +220,67 @@
       }
     //============================================================
     /*动画*/
-    let animation = function() {
+    let animation = (function() {
       let self = {};
       let Queue = []; //动画队列
-      let fireing = false //动画锁
+      let firing = false //动画锁
       let first = true; //通过add接口触发
       //==========================================================
       let doAnimation = function(element, options, func) {
         let width = options.width
+        // console.log(width,'width227')
+
         /*===========这里面定义了动画的算法=========*/
         // 默认动画时长2s
-        element.style.transitionDuration = '1000ms';
-        element.style.width =  width + 'px';
+        // element.style.transitionDuration = '400ms';
+        // element.style.width =  width + 'px';
 
         let optall={
-          complete:function(){jQuery.dequeue()},
+          complete:function(){},
           old:false,
           duration: 400,
           easing: undefined,
           queue:"fx",
         }
 
-        let anim=Animation(element, options, optall)
+        let anim=Animation(element, options, optall,func)
         //=================end====================
 
         //监听动画完结
         //重要，解锁
         //anim.stop
-        element.addEventListener('webkitTransitionEnd', function() {
-          func()
-        });
+        // element.addEventListener('webkitTransitionEnd', function() {
+        // function() {
+        //   firing = false;
+        //   _fire();
+        // }
+        //   func()
+        // });
       }
       //=========================================================
 
 
       //========fire===========
       let _fire = function() {
-        console.log(Queue,'queue236')
-        //加入动画正在触发
         //如果动画没有"正在执行（inprogress）"的话
-        if (!fireing) {
+        if (!firing) {
+          //取出doAnimation并执行
           let fn = Queue.shift();
-
           if (fn) {
             //执行动画的锁
-            fireing = true;
-            //next
-            //执行队首元素
+            firing = true;
+            /*执行doAnimation方法,doAnimation(element, options,function() {firing = false;_fire();})*/
             /*fn的参数就是形参func*/
             //func的作用是用来通知动画执行结束，并继续执行下一个动画
-            fn(function() {
-              fireing = false;
+            let func=function() {
+              console.log('firing','firing280')
+              firing = false;
               _fire();
-            });
-          } else {
-            fireing = true;
+            }
+
+            fn(func);
           }
+        
         }
       }
       //========fire end======
@@ -286,12 +296,9 @@
           Queue.push(function(func) {
             doAnimation(element, options, func);
           });
-
-          //如果队列内有触发器，就立刻触发动画
-          //就是每push进一个callback，就去触发Queue中的callback
+          //一旦queue中有callback的话就触发
+          /*该方法只执行一次*/
           if (first && Queue.length) {
-            //在执行Queue中的callback函数时，需要设为false
-            //以防止上个动画还未完成，就执行下个动画了
             first = false;
             self.fire();
           }
@@ -303,8 +310,7 @@
         }
       }
       //=======self end======
-    }();
-
+    })();
 
     //===================chenQuery的init===================================
     //为chenQuery的fn和prototype原型属性 赋 animate属性
