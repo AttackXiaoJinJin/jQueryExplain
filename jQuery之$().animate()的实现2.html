@@ -61,6 +61,7 @@
       let dequeue=function() {
         let Queue=dataPriv.get("queue")
         let fn = Queue.shift()
+        //当单个动画结束后，执行下个动画
         let next = function() {
           dequeue();
         }
