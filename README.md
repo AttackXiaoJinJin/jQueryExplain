@@ -61,10 +61,12 @@
 [模拟实现jQuery的$().on()和$().trigger()](https://www.jianshu.com/p/630b94a9a311)
 
 ***
-<h3>数据交互</h3>
-
-***
 <h3>动画引擎</h3>
+
+[jQuery源码解析之$().animate()（上）](https://www.jianshu.com/p/a48425fd3cf8)
+
+[jQuery源码解析之$().animate()（下）](https://www.jianshu.com/p/b621b9e1322f)
+
 
 ***
 <h2>微信公众号</h2>
