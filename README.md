@@ -67,6 +67,9 @@
 
 [jQuery源码解析之$().animate()（下）](https://www.jianshu.com/p/b621b9e1322f)
 
+[jQuery之模拟实现$().animate()（上）](https://www.jianshu.com/p/63274b3f0e0e)
+
+[jQuery之模拟实现$().animate()（下）](https://www.jianshu.com/p/722c706ff1a9)
 
 ***
 <h2>微信公众号</h2>
