@@ -63,6 +63,8 @@
 ***
 <h3>动画引擎</h3>
 
+[jQuery源码解析之$.queue()、$.dequeue()和jQuery.Callbacks()](https://www.jianshu.com/p/dcc031c1af80)
+
 [jQuery源码解析之$().animate()（上）](https://www.jianshu.com/p/a48425fd3cf8)
 
 [jQuery源码解析之$().animate()（下）](https://www.jianshu.com/p/b621b9e1322f)
